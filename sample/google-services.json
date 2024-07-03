@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "437182120653",
+    "project_id": "tarlanpaymentsdksampleapp",
+    "storage_bucket": "tarlanpaymentsdksampleapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:437182120653:android:5ff538f928b5b499ae9f84",
+        "android_client_info": {
+          "package_name": "kz.tarlan.payment.sdk.sample"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuNkHaYrdAjPG-ZjH3sxufJ3EQKCsmh2o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
