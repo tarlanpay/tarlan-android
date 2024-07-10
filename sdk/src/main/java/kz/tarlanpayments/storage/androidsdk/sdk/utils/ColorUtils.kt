@@ -1,4 +1,4 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success
+package kz.tarlanpayments.storage.androidsdk.sdk.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Brush

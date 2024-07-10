@@ -149,9 +149,10 @@ internal fun KitTextField(
                 cursorBrush = SolidColor(kitColor.accent),
                 decorationBox = @Composable {
                     Box(
-                        modifier = Modifier.background(Color.Transparent),
+                        modifier = Modifier
+                            .background(Color.Transparent)
+                            .fillMaxWidth(),
                     ) {
-
                         Box(
                             modifier = Modifier
                                 .align(if (textAlign == TextAlign.Start) Alignment.CenterStart else Alignment.Center)

@@ -1,6 +1,4 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success
-
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.Localization
+package kz.tarlanpayments.storage.androidsdk.sdk.utils
 
 enum class ValidationErrorType {
     Empty, Valid, Invalid

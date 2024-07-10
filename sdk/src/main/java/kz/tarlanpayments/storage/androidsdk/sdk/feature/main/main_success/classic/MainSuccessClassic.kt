@@ -34,6 +34,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.FragmentManager
 import coil.compose.AsyncImage
 import kz.tarlanpayments.storage.androidsdk.R
@@ -41,14 +42,15 @@ import kz.tarlanpayments.storage.androidsdk.sdk.DepsHolder
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormRs
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.Localization
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.MainSuccessController
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.ValidationErrorType
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.emailValidationErrorText
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.phoneValidationErrorText
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.toFormGradient
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.toInputGradient
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.toTextGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
+import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.FormController
+import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.visual_transformation.generalMaskPhoneTransformation
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationErrorType
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.emailValidationErrorText
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.phoneValidationErrorText
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toInputGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toTextGradient
 import kz.tarlanpayments.storage.androidsdk.sdk.provideCurrentLocale
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitBorderButton
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitCompanyLogo
@@ -67,7 +69,7 @@ internal fun MainSuccessClassic(
     transactionInfoMainRs: TransactionInfoMainRs,
     transactionInfoPayFormRs: TransactionInfoPayFormRs,
     transactionColorRs: TransactionColorRs,
-    mainSuccessController: MainSuccessController,
+    mainSuccessController: FormController,
     cardNumberTextFieldValue: TextFieldValue,
     onCardNumberChanged: (TextFieldValue) -> Unit,
     monthNumberTextFieldValue: TextFieldValue,
@@ -99,7 +101,6 @@ internal fun MainSuccessClassic(
     isSavedCardUse: Boolean,
     isEnabled: Boolean,
     isProgress: Boolean,
-    isGooglePayButtonClickEnabled: Boolean,
 
     onGooglePayTab: (Boolean) -> Unit,
 
@@ -200,9 +201,7 @@ internal fun MainSuccessClassic(
             ).invoke(this)
         } else {
             MainSuccessClassicGooglePay(
-                onGooglePayClick = onGooglePayClick,
-                isGooglePayClickEnabled = isGooglePayButtonClickEnabled,
-                brush = transactionColorRs.toFormGradient()
+                onGooglePayClick = onGooglePayClick
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -229,14 +228,19 @@ internal fun MainSuccessClassic(
                             )
                         }",
                         backgroundBrush = transactionColorRs.toInputGradient(),
-                        onValueChange = onPhoneNumberChanged,
+                        onValueChange = {
+                            if (it.text.length <= 10 && it.text.isDigitsOnly()) {
+                                onPhoneNumberChanged(it)
+                            }
+                        },
                         labelColor = parseColor(color = transactionColorRs.inputLabelColor),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Next
                         ),
                         showError = phoneError != ValidationErrorType.Valid,
-                        errorText = phoneError.phoneValidationErrorText(currentLanguage)
+                        errorText = phoneError.phoneValidationErrorText(currentLanguage),
+                        visualTransformation = { generalMaskPhoneTransformation(text = it) }
                     )
 
                 val emailRequiredHint = if (mainSuccessController.isEmailRequired) "* " else ""

@@ -30,6 +30,8 @@ import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormRs
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.classic.MainSuccessClassic
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationErrorType
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationUtils
 import org.json.JSONObject
 
 @Composable
@@ -54,7 +56,7 @@ internal fun MainSuccessView(
             transactionHash = transactionHash
         )
     )
-    val controller = MainSuccessController(
+    val controller = FormController(
         transactionInfoMainRs = transactionInfoMainRs,
         transactionInfoPayFormRs = transactionInfoPayFormRs,
         isPhoneCanUseGooglePay = isPhoneCanUserGooglePay,
@@ -150,158 +152,59 @@ internal fun MainSuccessView(
         }
     }
 
-
-    fun isAdditionalFieldsFilled(): Boolean {
-        if (isGooglePayNow) {
-            return true
-        }
-        if (controller.isEmailRequired) {
-            if (!(emailTextFieldValue.text.isNotEmpty() && emailTextFieldValue.text.validateEmail()))
-                return false
-        }
-
-        if (controller.isShowEmail && emailTextFieldValue.text.isNotEmpty()) {
-            if (!emailTextFieldValue.text.validateEmail())
-                return false
-        }
-
-        if (controller.isPhoneRequired) {
-            if (!(phoneTextFieldValue.text.isNotEmpty() && phoneTextFieldValue.text.validatePhone()))
-                return false
-        }
-
-        if (controller.isShowPhone && phoneTextFieldValue.text.isNotEmpty()) {
-            if (!(phoneTextFieldValue.text.validatePhone())) {
-                return false
-            }
-        }
-
-        return true
-    }
-
-    fun isCardRelatedFieldsFilled(): Boolean {
-
-        if (isGooglePayNow)
-            return true
-
-        if (controller.isCardHolderVisible) {
-            if (cardHolderTextFieldValue.text.isEmpty()) {
-                return false
-            }
-        }
-
-        if (controller.isPanVisible) {
-            if (!(cardNumberTextFieldValue.text.length == 16 && cardNumberTextFieldValue.text.validateLunaCardNumber())) {
-                return false
-            }
-        }
-
-        if (controller.isCvvVisible) {
-            if (cvvTextFieldValue.text.length != 3) {
-                return false
-            }
-        }
-
-        if (controller.isExpDate) {
-            if (!(monthNumberTextFieldValue.text.isNotEmpty() && monthNumberTextFieldValue.text.toInt() <= 12 && yearNumberTextFieldValue.text.isNotEmpty() &&
-                        yearNumberTextFieldValue.text.toInt() >= 24 && yearNumberTextFieldValue.text.toInt() <= 99)
-            ) {
-                return false
-            }
-        }
-
-        return true
-    }
-
     fun isSavedCardSelected(): Boolean {
-        if (isGooglePayNow) {
-            return true
-        }
         return isSavedCardClicked && isSavedCardToken.isNotEmpty()
     }
 
+
+    fun canSendFromSelectedCard(): Boolean {
+        return isSavedCardSelected() && ValidationUtils.isAdditionalFieldsValid(
+            formController = controller,
+            email = emailTextFieldValue.text,
+            phone = phoneTextFieldValue.text
+        )
+    }
+
+    fun canSendFromNewCard(): Boolean {
+        return ValidationUtils.isCardFieldsValid(
+            formController = controller,
+            cardNumber = cardNumberTextFieldValue.text,
+            month = monthNumberTextFieldValue.text,
+            year = yearNumberTextFieldValue.text,
+            cvv = cvvTextFieldValue.text,
+            cardHolder = cardHolderTextFieldValue.text
+        ) && ValidationUtils.isAdditionalFieldsValid(
+            formController = controller,
+            email = emailTextFieldValue.text,
+            phone = phoneTextFieldValue.text
+        )
+    }
+
     fun canSend(): Boolean {
-        return isAdditionalFieldsFilled() && (isCardRelatedFieldsFilled() || isSavedCardSelected())
+        return isGooglePayNow || canSendFromNewCard() || canSendFromSelectedCard()
     }
-
-    fun isGooglePayButtonEnabled(): Boolean {
-        return isAdditionalFieldsFilled() && isGooglePayClickEnabled
-    }
-
-    fun validateCardNumber() {
-        cardNumberError = when {
-            cardNumberTextFieldValue.text.isEmpty() -> ValidationErrorType.Empty
-            cardNumberTextFieldValue.text.length != 16 -> ValidationErrorType.Invalid
-            !cardNumberTextFieldValue.text.validateLunaCardNumber() -> ValidationErrorType.Invalid
-            else -> ValidationErrorType.Valid
-        }
-    }
-
-    fun validateExpDate() {
-        cardExpError = when {
-            monthNumberTextFieldValue.text.isEmpty() -> ValidationErrorType.Empty
-            monthNumberTextFieldValue.text.toInt() > 12 -> ValidationErrorType.Invalid
-            yearNumberTextFieldValue.text.isEmpty() -> ValidationErrorType.Empty
-            yearNumberTextFieldValue.text.length != 2 -> ValidationErrorType.Invalid
-            yearNumberTextFieldValue.text.toInt() < 23 -> ValidationErrorType.Invalid
-            yearNumberTextFieldValue.text.toInt() >= 99 -> ValidationErrorType.Invalid
-            else -> ValidationErrorType.Valid
-        }
-    }
-
-    fun validateCvv() {
-        cvvNumberError = when {
-            cvvTextFieldValue.text.isEmpty() -> ValidationErrorType.Empty
-            cvvTextFieldValue.text.length != 3 -> ValidationErrorType.Invalid
-            else -> ValidationErrorType.Valid
-        }
-    }
-
-    fun validateEmail() {
-        emailError = when {
-            emailTextFieldValue.text.isEmpty() -> ValidationErrorType.Empty
-            emailTextFieldValue.text.isNotEmpty() && !emailTextFieldValue.text.validateEmail() -> ValidationErrorType.Invalid
-            else -> ValidationErrorType.Valid
-        }
-    }
-
-    fun validatePhone() {
-        phoneError = when {
-            phoneTextFieldValue.text.isEmpty() -> ValidationErrorType.Empty
-            phoneTextFieldValue.text.isNotEmpty() && !phoneTextFieldValue.text.validatePhone() -> ValidationErrorType.Invalid
-            else -> ValidationErrorType.Valid
-        }
-    }
-
-    fun validateCardHolder() {
-        cardHolderError = when {
-            cardHolderTextFieldValue.text.isEmpty() -> ValidationErrorType.Empty
-            cardHolderTextFieldValue.text.length < 2 -> ValidationErrorType.Invalid
-            cardHolderTextFieldValue.text.length > 26 -> ValidationErrorType.Invalid
-            !cardHolderTextFieldValue.text.isLatinLetter() -> ValidationErrorType.Invalid
-            else -> ValidationErrorType.Valid
-        }
-    }
-
 
     fun validateFields() {
-        if (controller.isPanVisible) {
-            validateCardNumber()
+        if (controller.isPanVisible && !isSavedCardSelected()) {
+            cardNumberError = ValidationUtils.validateCardNumber(cardNumberTextFieldValue.text)
         }
-        if (controller.isCvvVisible) {
-            validateCvv()
+        if (controller.isCvvVisible && !isSavedCardSelected()) {
+            cvvNumberError = ValidationUtils.validateCvv(cvvTextFieldValue.text)
         }
-        if (controller.isExpDate) {
-            validateExpDate()
+        if (controller.isExpDate && !isSavedCardSelected()) {
+            cardExpError = ValidationUtils.validateExpDate(
+                monthNumberTextFieldValue.text,
+                yearNumberTextFieldValue.text
+            )
         }
         if (controller.isEmailRequired || (emailTextFieldValue.text.isNotEmpty() && controller.isShowEmail)) {
-            validateEmail()
+            emailError = ValidationUtils.validateEmail(emailTextFieldValue.text)
         }
         if (controller.isPhoneRequired || (phoneTextFieldValue.text.isNotEmpty() && controller.isShowPhone)) {
-            validatePhone()
+            phoneError = ValidationUtils.validatePhone(phoneTextFieldValue.text)
         }
-        if (controller.isCardHolderVisible) {
-            validateCardHolder()
+        if (controller.isCardHolderVisible && !isSavedCardSelected()) {
+            cardHolderError = ValidationUtils.validateCardHolder(cardHolderTextFieldValue.text)
         }
     }
 
@@ -376,7 +279,7 @@ internal fun MainSuccessView(
                     month = monthNumberTextFieldValue.text,
                     year = yearNumberTextFieldValue.text,
                     email = emailTextFieldValue.text,
-                    phone = phoneTextFieldValue.text,
+                    phone = "+7${phoneTextFieldValue.text}",
                     cardHolder = cardHolderTextFieldValue.text,
                     saveCard = isSaveCard
                 )
@@ -386,7 +289,7 @@ internal fun MainSuccessView(
                 MainSuccessAction.FromSavedCard(
                     encryptedId = isSavedCardToken,
                     email = emailTextFieldValue.text,
-                    phone = phoneTextFieldValue.text
+                    phone = "+7${phoneTextFieldValue.text}"
                 )
             )
         }
@@ -408,8 +311,19 @@ internal fun MainSuccessView(
                 cardNumberTextFieldValue = it.copy(text = filter)
             }
 
+
             if (cardNumberTextFieldValue.text.length == 16) {
-                focusRequesters["monthNumber"]?.requestFocus()
+                if (controller.isExpDate) {
+                    focusRequesters["monthNumber"]?.requestFocus()
+                } else if (controller.isCardHolderVisible) {
+                    focusRequesters["cardHolder"]?.requestFocus()
+                } else if (controller.isShowEmail) {
+                    focusRequesters["email"]?.requestFocus()
+                } else if (controller.isShowPhone) {
+                    focusRequesters["phone"]?.requestFocus()
+                } else {
+                    focusManager.clearFocus()
+                }
             }
 
             cardNumberError = ValidationErrorType.Valid
@@ -423,7 +337,9 @@ internal fun MainSuccessView(
             }
 
             if (monthNumberTextFieldValue.text.length == 2) {
-                focusRequesters["yearNumber"]?.requestFocus()
+                if (controller.isExpDate) {
+                    focusRequesters["yearNumber"]?.requestFocus()
+                }
             }
 
             cardExpError = ValidationErrorType.Valid
@@ -437,7 +353,9 @@ internal fun MainSuccessView(
             }
 
             if (yearNumberTextFieldValue.text.length == 2) {
-                focusRequesters["cvvNumber"]?.requestFocus()
+                if (controller.isCvvVisible) {
+                    focusRequesters["cvvNumber"]?.requestFocus()
+                }
             }
 
             cardExpError = ValidationErrorType.Valid
@@ -509,7 +427,6 @@ internal fun MainSuccessView(
         isSavedCardUse = isSavedCardClicked,
         isEnabled = true,
         isProgress = state is MainSuccessState.Loading,
-        isGooglePayButtonClickEnabled = isGooglePayButtonEnabled(),
         onGooglePayClick = {
             requestGooglePay(transactionInfoMainRs, googlePayFacade)
         },
@@ -542,43 +459,13 @@ internal fun MainSuccessView(
     }
 }
 
-private fun String.isLatinLetter(): Boolean {
-    return this.all { it in 'A'..'Z' || it in 'a'..'z' || it == ' ' }
-}
-
-private fun String.validateEmail(): Boolean {
-    return android.util.Patterns.EMAIL_ADDRESS.matcher(this).matches()
-}
-
-private fun String.validatePhone(): Boolean {
-    return this.length == 12
-}
-
-private fun String.validateLunaCardNumber(): Boolean {
-    var sum = 0
-    var alternate = false
-    for (i in this.length - 1 downTo 0) {
-        var n = this[i].digitToInt() // Преобразование символа в число
-        if (alternate) {
-            n *= 2
-            if (n > 9) {
-                n = (n % 10) + 1
-            }
-        }
-        sum += n
-        alternate = !alternate
-    }
-    return sum % 10 == 0
-}
-
 fun jsonToMap(jsonObject: JSONObject): Map<String, Any> {
     val map = mutableMapOf<String, Any>()
 
     val keys = jsonObject.keys()
     while (keys.hasNext()) {
         val key = keys.next()
-        val value = jsonObject.get(key)
-        when (value) {
+        when (val value = jsonObject.get(key)) {
             is JSONObject -> map[key] = jsonToMap(value)
             else -> map[key] = value
         }

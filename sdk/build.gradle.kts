@@ -85,46 +85,46 @@ dependencies {
 }
 
 
-publishing {
-    publications {
-        create<MavenPublication>("release") {
-            from(components["release"])
-
-            groupId = "kz.tarlanpayments.storage"
-            artifactId = "androidsdk"
-            version = "1.0.0"
-
-            pom {
-                name.set("tarlan-android")
-                description.set("Tarlan Android SDK")
-                url.set("https://github.com/your-repo/your-library")
-
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("your-id")
-                        name.set("Your Name")
-                        email.set("your-email@example.com")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/your-repo/your-library.git")
-                    developerConnection.set("scm:git:ssh://github.com:your-repo/your-library.git")
-                    url.set("https://github.com/your-repo/your-library")
-                }
-            }
-        }
-    }
-}
-
-signing {
-    useInMemoryPgpKeys(System.getenv("GPG_SIGNING_KEY"), System.getenv("GPG_SIGNING_PASSWORD"))
-    sign(publishing.publications["release"])
-}
+//publishing {
+//    publications {
+//        create<MavenPublication>("release") {
+//            from(components["release"])
+//
+//            groupId = "kz.tarlanpayments.storage"
+//            artifactId = "androidsdk"
+//            version = "1.0.0"
+//
+//            pom {
+//                name.set("tarlan-android")
+//                description.set("Tarlan Android SDK")
+//                url.set("https://github.com/your-repo/your-library")
+//
+//                licenses {
+//                    license {
+//                        name.set("The Apache License, Version 2.0")
+//                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+//                    }
+//                }
+//
+//                developers {
+//                    developer {
+//                        id.set("your-id")
+//                        name.set("Your Name")
+//                        email.set("your-email@example.com")
+//                    }
+//                }
+//
+//                scm {
+//                    connection.set("scm:git:git://github.com/your-repo/your-library.git")
+//                    developerConnection.set("scm:git:ssh://github.com:your-repo/your-library.git")
+//                    url.set("https://github.com/your-repo/your-library")
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//signing {
+//    useInMemoryPgpKeys(System.getenv("GPG_SIGNING_KEY"), System.getenv("GPG_SIGNING_PASSWORD"))
+//    sign(publishing.publications["release"])
+//}

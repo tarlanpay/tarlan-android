@@ -1,4 +1,4 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.feature
+package kz.tarlanpayments.storage.androidsdk.sdk.utils
 
 internal object Localization {
 
@@ -108,7 +108,7 @@ internal object Localization {
         KeyPhone to "Телефон:",
         KeyAddNewCard to "+ Добавить новую карту",
         KeyOrderNumber to "Номер заказа",
-        KeyAmount to "Сумма опталы",
+        KeyAmount to "Сумма оплаты",
         KeyFee to "Комиссия",
         KeyBank to "Название банка-эквайера",
         KeyDate to "Дата транзакции",

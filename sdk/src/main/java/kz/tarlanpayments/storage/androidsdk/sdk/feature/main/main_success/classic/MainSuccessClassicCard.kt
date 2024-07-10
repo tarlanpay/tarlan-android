@@ -40,22 +40,22 @@ import androidx.fragment.app.FragmentManager
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.CardPickerBottomSheet
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.Localization
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.MainSuccessController
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.ValidationErrorType
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.cardHolderValidationErrorText
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.cardValidationErrorText
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.cvvValidationErrorText
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.monthValidationErrorText
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.toFormGradient
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.toInputGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
+import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.FormController
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationErrorType
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.cardHolderValidationErrorText
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.cardValidationErrorText
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.cvvValidationErrorText
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.monthValidationErrorText
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toInputGradient
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.visual_transformation.CardNumberVisualTransformation
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitTextField
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.parseColor
 
 @Composable
 internal fun MainSuccessClassicCard(
-    controller: MainSuccessController,
+    controller: FormController,
     focusRequester: Map<String, FocusRequester>,
     fragmentManager: FragmentManager,
 
@@ -294,7 +294,7 @@ internal fun MainSuccessClassicCard(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    if (controller.isSavedCardVisible && !isSavedCardUse) {
+    if (controller.isSaveCardVisible && !isSavedCardUse) {
         Row(
             Modifier
                 .fillMaxWidth()

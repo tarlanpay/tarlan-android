@@ -45,9 +45,9 @@ import com.smarttoolfactory.screenshot.ScreenshotBox
 import com.smarttoolfactory.screenshot.ScreenshotState
 import com.smarttoolfactory.screenshot.rememberScreenshotState
 import kz.tarlanpayments.storage.androidsdk.R
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.Localization
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.toFormGradient
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.toTextGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toTextGradient
 import kz.tarlanpayments.storage.androidsdk.sdk.provideCurrentLocale
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitBorderButton
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitCompanyLogo

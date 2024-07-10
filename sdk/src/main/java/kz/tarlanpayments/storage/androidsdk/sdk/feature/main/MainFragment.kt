@@ -94,12 +94,7 @@ internal class MainFragment : Fragment() {
                     transactionId = launcher.transactionId,
                     transactionHash = launcher.hash,
                     transactionInfoMainRs = currentState.mainInfo,
-                    transactionInfoPayFormRs = currentState.payFormRs.copy(
-                        hasPhone = true,
-                        hasEmail = true,
-                        requiredPhone = true,
-                        requiredEmail = true
-                    ),
+                    transactionInfoPayFormRs = currentState.payFormRs,
                     transactionColorRs = currentState.colorsDto,
                     fragment = fragment,
                     googlePayFacade = googlePayFacade

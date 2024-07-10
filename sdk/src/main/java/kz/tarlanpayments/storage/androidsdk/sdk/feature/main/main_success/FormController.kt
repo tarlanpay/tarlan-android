@@ -4,7 +4,7 @@ import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormRs
 
 
-internal class MainSuccessController(
+internal class FormController(
     transactionInfoMainRs: TransactionInfoMainRs,
     transactionInfoPayFormRs: TransactionInfoPayFormRs,
     isPhoneCanUseGooglePay: Boolean,
@@ -25,11 +25,10 @@ internal class MainSuccessController(
             &&
             transactionInfoMainRs.availableTypes.find { it.code == TransactionInfoMainRs.TransactionAvailableTypesDto.GooglePay } != null
 
+    val isSaveCardVisible =
+        transactionInfoMainRs.transactionType.code == TransactionInfoMainRs.TransactionTypeDto.IN
     val isSavedCardVisible =
-        transactionInfoMainRs.transactionType.code != TransactionInfoMainRs.TransactionTypeDto.CARD_LINK
-                && transactionInfoMainRs.availableTypes.find {
-            it.code == TransactionInfoMainRs.TransactionAvailableTypesDto.CardLink
-        } != null
+        transactionInfoMainRs.cards.isNotEmpty() && transactionInfoMainRs.transactionType.code != TransactionInfoMainRs.TransactionTypeDto.CARD_LINK
 
     val isShowEmail = transactionInfoPayFormRs.hasEmail
     val isEmailRequired = transactionInfoPayFormRs.requiredEmail

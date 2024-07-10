@@ -48,10 +48,11 @@ import kotlinx.parcelize.Parcelize
 import kz.tarlanpayments.storage.androidsdk.R
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.toFormGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
 import kz.tarlanpayments.storage.androidsdk.sdk.provideCurrentLocale
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.theme.KitTheme
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.parseColor
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
 
 internal class CardPickerBottomSheet : BottomSheetDialogFragment() {
 
