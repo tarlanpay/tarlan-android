@@ -48,6 +48,8 @@ internal fun MainSuccessView(
     var isGooglePayClickEnabled by remember { mutableStateOf(true) }
     var isPhoneCanUserGooglePay by remember { mutableStateOf(false) }
     var isGooglePayNow by remember { mutableStateOf(false) }
+    var savedCards by remember { mutableStateOf(transactionInfoMainRs.cards) }
+
 
     val viewModel = viewModel<MainSuccessViewModel>(
         factory = MainSuccessViewModel.MainSuccessViewModelFactory(
@@ -74,10 +76,10 @@ internal fun MainSuccessView(
             "phone" to FocusRequester()
         )
     }
-    val firstCard = transactionInfoMainRs.cards.firstOrNull()?.maskedPan
+    val firstCard by remember { mutableStateOf(savedCards.firstOrNull()?.maskedPan) }
 
     // region text fields value
-    var cardNumberTextFieldValue by remember { mutableStateOf(TextFieldValue((if (controller.hasDefaultCard) firstCard!! else ""))) }
+    var cardNumberTextFieldValue by remember { mutableStateOf(TextFieldValue((if (controller.hasDefaultCard && savedCards.isNotEmpty()) firstCard!! else ""))) }
     var monthNumberTextFieldValue by remember { mutableStateOf(TextFieldValue("")) }
     var yearNumberTextFieldValue by remember { mutableStateOf(TextFieldValue("")) }
     var cvvTextFieldValue by remember { mutableStateOf(TextFieldValue("")) }
@@ -95,11 +97,11 @@ internal fun MainSuccessView(
     var cardHolderError by remember { mutableStateOf(ValidationErrorType.Valid) }
     // endregion
 
-    var isSavedCardClicked by remember { mutableStateOf(controller.hasDefaultCard) }
+    var isSavedCardClicked by remember { mutableStateOf(controller.hasDefaultCard && savedCards.isNotEmpty()) }
     var savedCardNumber by remember {
-        mutableStateOf(TextFieldValue((if (controller.hasDefaultCard) firstCard!! else "")))
+        mutableStateOf(TextFieldValue((if (controller.hasDefaultCard && savedCards.isNotEmpty()) firstCard!! else "")))
     }
-    var isSavedCardToken by remember { mutableStateOf((if (controller.hasDefaultCard) transactionInfoMainRs.cards.first().cardToken else "")) }
+    var isSavedCardToken by remember { mutableStateOf((if (controller.hasDefaultCard && savedCards.isNotEmpty()) savedCards.first().cardToken else "")) }
 
     var isSaveCard by remember { mutableStateOf(false) }
 
@@ -442,14 +444,21 @@ internal fun MainSuccessView(
         onGooglePayTab = {
             isGooglePayNow = it
         },
-    ) {
-        viewModel.setAction(
-            MainSuccessAction.DeleteCard(
-                projectId = transactionInfoMainRs.projectId,
-                cardId = it,
+        savedCards = savedCards,
+        onCardRemoved = { cardToken ->
+
+            savedCards = savedCards.toMutableList().apply {
+                this.removeIf { it.cardToken == cardToken }
+            }
+
+            viewModel.setAction(
+                MainSuccessAction.DeleteCard(
+                    projectId = transactionInfoMainRs.projectId,
+                    cardId = cardToken,
+                )
             )
-        )
-    }
+        }
+    )
 
     LaunchedEffect(Unit) {
         this.launch {

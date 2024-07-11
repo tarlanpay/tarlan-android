@@ -97,6 +97,7 @@ internal fun MainSuccessClassic(
     isSavedCardNumber: TextFieldValue,
     onSaveCardChanged: (Boolean) -> Unit,
     isSaveCard: Boolean,
+    savedCards: List<TransactionInfoMainRs.CardDto>,
 
     isSavedCardUse: Boolean,
     isEnabled: Boolean,
@@ -109,11 +110,11 @@ internal fun MainSuccessClassic(
 
     onCancelClick: () -> Unit,
     onCardRemoved: (String) -> Unit,
-) {
+
+    ) {
     val context = LocalContext.current
     var currentLanguage by remember { mutableStateOf(context.provideCurrentLocale()) }
     var currentPageIndex by remember { mutableIntStateOf(0) }
-    val savedCards by remember { mutableStateOf(transactionInfoMainRs.cards) }
 
     val secondaryColor = Color(0xFFB0B0B0)
 
@@ -273,12 +274,7 @@ internal fun MainSuccessClassic(
             Spacer(modifier = Modifier.height(16.dp))
 
             KitGradientButton(
-                title = "${
-                    Localization.getString(
-                        Localization.KeyPay,
-                        locale = currentLanguage
-                    )
-                } ${transactionInfoMainRs.totalAmount}₸",
+                title = transactionInfoMainRs.getButtonTitle(currentLanguage),
                 brush = transactionColorRs.toFormGradient(),
                 textColor = parseColor(color = transactionColorRs.inputLabelColor),
                 accentColor = parseColor(color = transactionColorRs.inputLabelColor),
@@ -301,6 +297,37 @@ internal fun MainSuccessClassic(
         )
 
         KitCompanyLogo().invoke(this)
+    }
+}
+
+private fun TransactionInfoMainRs.getButtonTitle(currentLanguage: String): String {
+    when (this.transactionType.code) {
+        TransactionInfoMainRs.TransactionTypeDto.IN -> {
+            return "${
+                Localization.getString(
+                    Localization.KeyPay,
+                    currentLanguage
+                )
+            } ${this.totalAmount}₸"
+        }
+
+        TransactionInfoMainRs.TransactionTypeDto.OUT -> {
+            return "${
+                Localization.getString(
+                    Localization.KeyRefund,
+                    currentLanguage
+                )
+            } ${this.totalAmount}₸"
+        }
+
+        TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> {
+            return Localization.getString(
+                Localization.KeyCardLink,
+                currentLanguage
+            )
+        }
+
+        else -> return ""
     }
 }
 

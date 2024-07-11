@@ -16,6 +16,8 @@ internal object Localization {
     val KeyEmail = "email"
     val KeyPhone = "phone"
     val KeyAddNewCard = "add_new_card"
+    val KeyRefund = "refund"
+    val KeyCardLink = "card_link"
 
     val KeyOrderNumber = "order_number"
     val KeyAmount = "amount"
@@ -90,7 +92,9 @@ internal object Localization {
         KeyEmailInvalidError to "Invalid email",
         KeyCardNumberEmptyError to "Enter card number",
         KeyCardExpriredEmptyError to "Enter card expiry date",
-        KeyEmailEmptyError to "Enter email"
+        KeyEmailEmptyError to "Enter email",
+        KeyRefund to "Refund",
+        KeyCardLink to "Привязать карту"
     )
     val russianStrings = mapOf(
         KeyCard to "Card",
@@ -134,7 +138,9 @@ internal object Localization {
         KeyEmailInvalidError to "Неверный формат электронного адреса",
         KeyCardNumberEmptyError to "Введите номер карты",
         KeyCardExpriredEmptyError to "Введите срок действия карты",
-        KeyEmailEmptyError to "Введите email"
+        KeyEmailEmptyError to "Введите email",
+        KeyRefund to "Вывести",
+        KeyCardLink to "Привязать карту"
     )
     val kazakhStrings = mapOf(
         KeyCard to "Карта",
@@ -178,7 +184,9 @@ internal object Localization {
         KeyEmailInvalidError to "Дұрыс email емес",
         KeyCardNumberEmptyError to "Карта нөмірін енгізіңіз",
         KeyCardExpriredEmptyError to "Картаның мерзімін енгізіңіз",
-        KeyEmailEmptyError to "Email енгізіңіз"
+        KeyEmailEmptyError to "Email енгізіңіз",
+        KeyRefund to "Шығару",
+        KeyCardLink to "Картаны байланыстыру"
     )
 
 

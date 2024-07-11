@@ -6,6 +6,7 @@ import kz.tarlanpayments.storage.androidsdk.sdk.data.TarlanCookieManager
 import kz.tarlanpayments.storage.androidsdk.sdk.data.TarlanHeaderInterceptor
 import kz.tarlanpayments.storage.androidsdk.sdk.data.TarlanRepository
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -47,6 +48,9 @@ internal object DepsHolder {
             .Builder()
             .cookieJar(TarlanCookieManager())
             .addInterceptor(TarlanHeaderInterceptor())
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
             .callTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
             .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)

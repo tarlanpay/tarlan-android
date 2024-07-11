@@ -112,7 +112,7 @@ internal fun MainSuccessClassicCard(
                     onValueChange = onCardNumberChanged,
                     labelColor = parseColor(color = transactionColorRs.inputLabelColor),
                     trailingIcon = {
-                        if (controller.isSavedCardVisible)
+                        if (controller.isSavedCardVisible && savedCard.isNotEmpty())
                             Icon(
                                 modifier = Modifier
                                     .size(24.dp)
