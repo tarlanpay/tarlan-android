@@ -453,7 +453,7 @@ internal class StatusFragment : Fragment() {
             TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
                 Text(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = "${transactionBillRs!!.orderAmount}₸",
+                    text = "${transactionBillRs!!.totalAmount}₸",
                     style = TextStyle(
                         brush = transactionColor.toTextGradient(),
                         fontWeight = FontWeight.W700,
