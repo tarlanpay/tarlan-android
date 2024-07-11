@@ -3,7 +3,7 @@
 
 # Tarlan Pay Android SDK
 
-[![GitHub release](https://img.shields.io/github/release/tarlanpay/tarlan-android.svg?maxAge=60)](https://github.com/tarlanpay/tarlan-android/releases)
+[![GitHub release](https://img.shields.io/github/v/release/tarlanpay/tarlan-android.svg?maxAge=60)](https://github.com/tarlanpay/tarlan-android/releases)
 
 SDK Tarlan Pay для Android позволяет быстро и легко интегрировать платежный функционал в ваше Android приложение. Мы предоставляем мощные и настраиваемые UI-элементы, которые можно использовать "из коробки" для сбора платежных данных ваших пользователей. 
 
