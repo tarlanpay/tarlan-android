@@ -1,17 +1,19 @@
+val appGroupId = "kz.tarlanpayments.storage"
+val appArtifactId = "androidsdk"
+val appVersion = "1.0.6"
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("kotlin-parcelize")
-    id("maven-publish")
-    id("signing")
 }
 
-group = "kz.tarlanpayments.storage.androidsdk"
-version = "1.0.0"
+group = "${appGroupId}.${appArtifactId}"
+version = appVersion
 
 android {
     buildFeatures.buildConfig = true
-    namespace = "kz.tarlanpayments.storage.androidsdk"
+    namespace = "${appGroupId}.${appArtifactId}"
     compileSdk = 34
 
     defaultConfig {
@@ -24,6 +26,10 @@ android {
             buildConfigField("String", "BASE_URL", "\"https://prapi.tarlanpayments.kz\"")
             buildConfigField("String", "MERCHANT_GATEWAY", "\"tarlanpayments\"")
             buildConfigField("String", "MERCHANT_GATEWAY_ID", "\"BCR2DN4T7C37TEZS\"")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
         debug {
             isMinifyEnabled = true
@@ -58,20 +64,17 @@ android {
 
 dependencies {
     implementation("com.google.android.material:material:1.12.0")
-    val composeBom = platform("androidx.compose:compose-bom:2024.02.02")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
+    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
 
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3")
 
-    implementation("androidx.compose.material:material")
+    implementation("androidx.compose.material:material:1.6.8")
 
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
 
     implementation("com.github.terrakok:cicerone:7.1")
@@ -83,48 +86,3 @@ dependencies {
     implementation("com.google.android.gms:play-services-wallet:19.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }
-
-
-//publishing {
-//    publications {
-//        create<MavenPublication>("release") {
-//            from(components["release"])
-//
-//            groupId = "kz.tarlanpayments.storage"
-//            artifactId = "androidsdk"
-//            version = "1.0.0"
-//
-//            pom {
-//                name.set("tarlan-android")
-//                description.set("Tarlan Android SDK")
-//                url.set("https://github.com/your-repo/your-library")
-//
-//                licenses {
-//                    license {
-//                        name.set("The Apache License, Version 2.0")
-//                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-//                    }
-//                }
-//
-//                developers {
-//                    developer {
-//                        id.set("your-id")
-//                        name.set("Your Name")
-//                        email.set("your-email@example.com")
-//                    }
-//                }
-//
-//                scm {
-//                    connection.set("scm:git:git://github.com/your-repo/your-library.git")
-//                    developerConnection.set("scm:git:ssh://github.com:your-repo/your-library.git")
-//                    url.set("https://github.com/your-repo/your-library")
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//signing {
-//    useInMemoryPgpKeys(System.getenv("GPG_SIGNING_KEY"), System.getenv("GPG_SIGNING_PASSWORD"))
-//    sign(publishing.publications["release"])
-//}
