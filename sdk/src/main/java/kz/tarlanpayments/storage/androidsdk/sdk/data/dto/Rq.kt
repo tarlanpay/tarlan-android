@@ -25,12 +25,9 @@ internal data class CardLinkRq(
     @SerializedName("full_name") @Expose val fullName: String? = null,
     @SerializedName("user_phone") @Expose val userPhone: String? = null,
     @SerializedName("user_email") @Expose val userEmail: String? = null,
-    @SerializedName("cvc") @Expose val cvc: String,
-    @SerializedName("month") @Expose val month: String,
-    @SerializedName("pan") @Expose val pan: String,
-    @SerializedName("year") @Expose val year: String,
     @SerializedName("transaction_hash") @Expose val transactionHash: String,
-    @SerializedName("save") @Expose val save: Boolean = true
+    @SerializedName("save") @Expose val save: Boolean = true,
+    @SerializedName("encrypted_card") @Expose val encryptedCard: String? = null,
 )
 
 internal data class PayoutRq(

@@ -74,16 +74,28 @@ internal class TarlanRepository {
         email: String? = null,
         phone: String? = null,
     ): BaseResponse<TransactionRs> {
+        val publicKey = apiService.getPublicKey().result
+        val valueToEncrypt = gson.toJson(
+            InRq.ValueToEncrypt(
+                pan = cardNumber,
+                cvc = cvv,
+                month = month,
+                year = year,
+                fullName = cardHolder
+            )
+        )
+        val encryptedCard = RSAEncryption.loadPublicKeyAndEncryptData(
+            data = valueToEncrypt,
+            pemPublicKey = publicKey
+        )
+
         return apiService.cardLink(
             CardLinkRq(
                 transactionId = transactionId,
                 fullName = cardHolder,
                 userPhone = phone,
                 userEmail = email,
-                cvc = cvv,
-                month = month,
-                year = year,
-                pan = cardNumber,
+                encryptedCard = encryptedCard,
                 transactionHash = hash,
             )
         )
