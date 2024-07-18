@@ -68,6 +68,5 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    implementation(project(":sdk"))
-//    implementation("kz.tarlanpayments.storage:androidsdk:1.0.6")
+    implementation("kz.tarlanpayments.storage:androidsdk:1.0.7")
 }
