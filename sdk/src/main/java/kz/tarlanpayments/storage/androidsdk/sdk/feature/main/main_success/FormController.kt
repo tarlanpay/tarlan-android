@@ -30,9 +30,9 @@ internal class FormController(
     val isSavedCardVisible =
         transactionInfoMainRs.transactionType.code != TransactionInfoMainRs.TransactionTypeDto.CARD_LINK
 
-    val isShowEmail = transactionInfoPayFormRs.hasEmail
+    val isShowEmail = transactionInfoPayFormRs.requiredEmail || transactionInfoPayFormRs.hasEmail
     val isEmailRequired = transactionInfoPayFormRs.requiredEmail
-    val isShowPhone = transactionInfoPayFormRs.hasPhone
+    val isShowPhone = transactionInfoPayFormRs.requiredPhone || transactionInfoPayFormRs.hasPhone
     val isPhoneRequired = transactionInfoPayFormRs.requiredPhone
     val hasDefaultCard = transactionInfoPayFormRs.hasDefaultCard
 }

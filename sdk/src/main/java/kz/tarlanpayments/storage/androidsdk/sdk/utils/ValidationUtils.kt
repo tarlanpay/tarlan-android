@@ -1,5 +1,6 @@
 package kz.tarlanpayments.storage.androidsdk.sdk.utils
 
+import android.util.Log
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.FormController
 import java.util.Calendar
 
@@ -11,18 +12,30 @@ internal object ValidationUtils {
         phone: String,
     ): Boolean {
         if (formController.isEmailRequired) {
-            if (validateEmail(email) != ValidationErrorType.Valid) return false
+            if (validateEmail(email) != ValidationErrorType.Valid) {
+                Log.d("MainSuccessView", "Email is not valid, isEmailRequired: ${formController.isEmailRequired} email: $email")
+                return false
+            }
         }
-        if (formController.isShowEmail && email.isNotEmpty()) {
-            if (validateEmail(email) != ValidationErrorType.Valid) return false
+        if (formController.isShowEmail && email.isNotBlank()) {
+            if (validateEmail(email) != ValidationErrorType.Valid) {
+                Log.d("MainSuccessView", "Email is not valid, isShowEmail: ${formController.isShowEmail} email: $email")
+                return false
+            }
         }
 
         if (formController.isPhoneRequired) {
-            if (validatePhone(phone) != ValidationErrorType.Valid) return false
+            if (validatePhone(phone) != ValidationErrorType.Valid) {
+                Log.d("MainSuccessView", "Phone is not valid")
+                return false
+            }
         }
 
-        if (formController.isShowPhone && phone.isNotEmpty()) {
-            if (validatePhone(phone) != ValidationErrorType.Valid) return false
+        if (formController.isShowPhone && phone.isNotBlank()) {
+            if (validatePhone(phone) != ValidationErrorType.Valid) {
+                Log.d("MainSuccessView", "Phone is not valid")
+                return false
+            }
         }
 
         return true
@@ -37,15 +50,30 @@ internal object ValidationUtils {
         cardHolder: String
     ): Boolean {
         return when {
-            validateCardNumber(cardNumber) != ValidationErrorType.Valid -> false
-            formController.isPanVisible && validateCardNumber(cardNumber) != ValidationErrorType.Valid -> false
+            validateCardNumber(cardNumber) != ValidationErrorType.Valid -> {
+                Log.d("MainSuccessView", "Card number is not valid")
+                false
+            }
+            formController.isPanVisible && validateCardNumber(cardNumber) != ValidationErrorType.Valid -> {
+                Log.d("MainSuccessView", "Card number is not valid")
+                false
+            }
             formController.isExpDate && validateExpDate(
                 month,
                 year
-            ) != ValidationErrorType.Valid -> false
+            ) != ValidationErrorType.Valid -> {
+                Log.d("MainSuccessView", "Exp date is not valid")
+                false
+            }
 
-            formController.isCvvVisible && validateCvv(cvv) != ValidationErrorType.Valid -> false
-            formController.isCardHolderVisible && validateCardHolder(cardHolder) != ValidationErrorType.Valid -> false
+            formController.isCvvVisible && validateCvv(cvv) != ValidationErrorType.Valid -> {
+                Log.d("MainSuccessView", "Cvv is not valid")
+                false
+            }
+            formController.isCardHolderVisible && validateCardHolder(cardHolder) != ValidationErrorType.Valid -> {
+                Log.d("MainSuccessView", "Card holder is not valid")
+                false
+            }
             else -> true
         }
     }

@@ -269,6 +269,7 @@ internal class StatusFragment : Fragment() {
                         style = TextStyle(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.W400,
+                            textAlign = TextAlign.Center
                         )
                     )
                 }
@@ -300,15 +301,30 @@ internal class StatusFragment : Fragment() {
     private fun TransactionStatusRs.toIcon(): @Composable ColumnScope.() -> Unit = {
         when (this@toIcon.transactionInfoMain.transactionStatus.code) {
             TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
-                AsyncImage(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .align(Alignment.CenterHorizontally),
-                    model = DepsHolder.provideImage(transactionPayForm.logoFilePath),
-                    contentDescription = "",
-                    error = painterResource(id = R.drawable.ic_error_placaholder),
-                    placeholder = painterResource(id = R.drawable.ic_error_placaholder)
-                )
+                when (transactionInfoMain.transactionType.code) {
+                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> {
+                        Icon(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .size(64.dp),
+                            painter = painterResource(id = R.drawable.ic_success),
+                            contentDescription = "",
+                            tint = kitColor.positive
+                        )
+                    }
+
+                    else -> {
+                        AsyncImage(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .align(Alignment.CenterHorizontally),
+                            model = DepsHolder.provideImage(transactionPayForm.logoFilePath),
+                            contentDescription = "",
+                            error = painterResource(id = R.drawable.ic_error_placaholder),
+                            placeholder = painterResource(id = R.drawable.ic_error_placaholder)
+                        )
+                    }
+                }
             }
 
             TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
@@ -366,16 +382,36 @@ internal class StatusFragment : Fragment() {
         val currentLocale = LocalContext.current.provideCurrentLocale()
         when (this@toTitle.transactionInfoMain.transactionStatus.code) {
             TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = transactionPayForm.storeName,
-                    style = TextStyle(
-                        fontSize = 12.sp,
+
+                when (transactionInfoMain.transactionType.code) {
+                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK ->
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            text = Localization.getString(
+                                Localization.KeyBillCardLinkSuccess,
+                                currentLocale
+                            ),
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                color = kitColor.positive,
+                                fontWeight = FontWeight.W700
+                            ),
+                            color = secondaryColor,
+                            textAlign = TextAlign.Center
+                        )
+
+                    else -> Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        text = transactionPayForm.storeName,
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            color = secondaryColor,
+                            fontWeight = FontWeight.W400
+                        ),
                         color = secondaryColor,
-                        fontWeight = FontWeight.W400
-                    ),
-                    color = secondaryColor
-                )
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
@@ -408,7 +444,8 @@ internal class StatusFragment : Fragment() {
                                 color = kitColor.positive,
                                 fontWeight = FontWeight.W700
                             ),
-                            color = secondaryColor
+                            color = secondaryColor,
+                            textAlign = TextAlign.Center
                         )
 
                     else -> Text(
@@ -422,7 +459,8 @@ internal class StatusFragment : Fragment() {
                             color = kitColor.negative,
                             fontWeight = FontWeight.W700
                         ),
-                        color = kitColor.negative
+                        color = kitColor.negative,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -439,7 +477,8 @@ internal class StatusFragment : Fragment() {
                         color = kitColor.negative,
                         fontWeight = FontWeight.W700
                     ),
-                    color = kitColor.negative
+                    color = kitColor.negative,
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -451,15 +490,34 @@ internal class StatusFragment : Fragment() {
         val currentLocale = LocalContext.current.provideCurrentLocale()
         when (this@toSubtitle.transactionInfoMain.transactionStatus.code) {
             TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = "${transactionBillRs!!.totalAmount}₸",
-                    style = TextStyle(
-                        brush = transactionColor.toTextGradient(),
-                        fontWeight = FontWeight.W700,
-                        fontSize = 32.sp,
-                    ),
-                )
+                when (transactionInfoMain.transactionType.code) {
+                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK ->
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            text = Localization.getString(
+                                Localization.KeyBillCardLinkSuccessSubtitle,
+                                currentLocale
+                            ),
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                color = kitColor.positive,
+                                fontWeight = FontWeight.W400
+                            ),
+                            color = secondaryColor,
+                            textAlign = TextAlign.Center
+                        )
+
+                    else -> Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        text = "${transactionBillRs!!.totalAmount}₸",
+                        style = TextStyle(
+                            brush = transactionColor.toTextGradient(),
+                            fontWeight = FontWeight.W700,
+                            fontSize = 32.sp,
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
@@ -492,7 +550,8 @@ internal class StatusFragment : Fragment() {
                                 color = kitColor.positive,
                                 fontWeight = FontWeight.W400
                             ),
-                            color = secondaryColor
+                            color = secondaryColor,
+                            textAlign = TextAlign.Center
                         )
 
                     else -> Text(
@@ -534,58 +593,63 @@ internal class StatusFragment : Fragment() {
         val currentLocale = LocalContext.current.provideCurrentLocale()
         when (this@toBody.transactionInfoMain.transactionStatus.code) {
             TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
-                Spacer(modifier = Modifier.size(32.dp))
+                when (this@toBody.transactionInfoMain.transactionType.code) {
+                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> Unit
+                    else -> {
+                        Spacer(modifier = Modifier.size(32.dp))
 
-                KitDotDivider(secondaryColor)
+                        KitDotDivider(secondaryColor)
 
-                listOf(
-                    Localization.getString(
-                        Localization.KeyOrderNumber,
-                        currentLocale
-                    ) to transactionBillRs!!.transactionId.toString(),
-                    Localization.getString(
-                        Localization.KeyAmount,
-                        currentLocale
-                    ) to "${transactionBillRs.orderAmount}₸",
-                    Localization.getString(
-                        Localization.KeyFee,
-                        currentLocale
-                    ) to "${transactionBillRs.upperCommissionAmount}₸",
-                    Localization.getString(
-                        Localization.KeyDate,
-                        currentLocale
-                    ) to convertIsoToStandard(transactionBillRs.dateTime),
-                    Localization.getString(
-                        Localization.KeyBank,
-                        currentLocale
-                    ) to transactionBillRs.acquirerName,
-                ).forEach {
-                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        KitTitleValueComponent(
-                            title = it.first,
-                            value = it.second,
-                            titleColor = parseColor(color = transactionColor.mainFormColor),
-                            valueColor = secondaryColor
+                        listOf(
+                            Localization.getString(
+                                Localization.KeyOrderNumber,
+                                currentLocale
+                            ) to transactionBillRs!!.transactionId.toString(),
+                            Localization.getString(
+                                Localization.KeyAmount,
+                                currentLocale
+                            ) to "${transactionBillRs.orderAmount}₸",
+                            Localization.getString(
+                                Localization.KeyFee,
+                                currentLocale
+                            ) to "${transactionBillRs.upperCommissionAmount}₸",
+                            Localization.getString(
+                                Localization.KeyDate,
+                                currentLocale
+                            ) to convertIsoToStandard(transactionBillRs.dateTime),
+                            Localization.getString(
+                                Localization.KeyBank,
+                                currentLocale
+                            ) to transactionBillRs.acquirerName,
+                        ).forEach {
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                KitTitleValueComponent(
+                                    title = it.first,
+                                    value = it.second,
+                                    titleColor = parseColor(color = transactionColor.mainFormColor),
+                                    valueColor = secondaryColor
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.size(16.dp))
+
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            text = transactionBillRs.paymentOrganization,
+                            style = TextStyle(
+                                fontSize = 12.sp,
+                                color = secondaryColor,
+                                fontWeight = FontWeight.W500
+                            ),
+                            color = secondaryColor
                         )
+
+                        Spacer(modifier = Modifier.size(16.dp))
+
+                        KitDotDivider(secondaryColor = secondaryColor)
                     }
                 }
-
-                Spacer(modifier = Modifier.size(16.dp))
-
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = transactionBillRs.paymentOrganization,
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        color = secondaryColor,
-                        fontWeight = FontWeight.W500
-                    ),
-                    color = secondaryColor
-                )
-
-                Spacer(modifier = Modifier.size(16.dp))
-
-                KitDotDivider(secondaryColor = secondaryColor)
             }
 
             else -> Unit
