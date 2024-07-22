@@ -101,7 +101,7 @@ internal fun MainSuccessView(
     var savedCardNumber by remember {
         mutableStateOf(TextFieldValue((if (controller.hasDefaultCard && savedCards.isNotEmpty()) firstCard!! else "")))
     }
-    var isSavedCardToken by remember { mutableStateOf((if (controller.hasDefaultCard && savedCards.isNotEmpty()) savedCards.first().cardToken else "")) }
+    var savedCardToken by remember { mutableStateOf((if (controller.hasDefaultCard && savedCards.isNotEmpty()) savedCards.first().cardToken else "")) }
 
     var isSaveCard by remember { mutableStateOf(false) }
 
@@ -155,7 +155,7 @@ internal fun MainSuccessView(
     }
 
     fun isSavedCardSelected(): Boolean {
-        return isSavedCardClicked && isSavedCardToken.isNotEmpty()
+        return isSavedCardClicked && savedCardToken.isNotEmpty()
     }
 
 
@@ -289,7 +289,7 @@ internal fun MainSuccessView(
         } else {
             viewModel.setAction(
                 MainSuccessAction.FromSavedCard(
-                    encryptedId = isSavedCardToken,
+                    encryptedId = savedCardToken,
                     email = emailTextFieldValue.text,
                     phone = "+7${phoneTextFieldValue.text}"
                 )
@@ -412,12 +412,12 @@ internal fun MainSuccessView(
         isSavedCardChanged = { token, cardNumber ->
             if (token.isNotEmpty() && cardNumber.isNotEmpty()) {
                 isSavedCardClicked = true
-                isSavedCardToken = token
+                savedCardToken = token
                 savedCardNumber = TextFieldValue(cardNumber.filter { it.isDigit() || it == 'X' }
                     .replace('X', '*'))
             } else {
                 isSavedCardClicked = false
-                isSavedCardToken = ""
+                savedCardToken = ""
                 savedCardNumber = TextFieldValue("")
             }
 
@@ -450,6 +450,14 @@ internal fun MainSuccessView(
             savedCards = savedCards.toMutableList().apply {
                 this.removeIf { it.cardToken == cardToken }
             }
+
+            if (cardToken == savedCardToken) {
+                isSavedCardClicked = false
+                savedCardToken = ""
+                savedCardNumber = TextFieldValue("")
+            }
+
+            cardNumberError = ValidationErrorType.Valid
 
             viewModel.setAction(
                 MainSuccessAction.DeleteCard(

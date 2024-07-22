@@ -14,7 +14,7 @@ import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormR
 import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionRs
 
 internal sealed interface MainState {
-    object Loading : MainState
+    data object Loading : MainState
 
     data class Success(
         val colorsDto: TransactionColorRs,
