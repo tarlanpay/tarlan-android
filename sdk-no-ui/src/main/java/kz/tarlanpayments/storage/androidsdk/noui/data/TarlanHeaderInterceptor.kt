@@ -1,4 +1,4 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.data
+package kz.tarlanpayments.storage.androidsdk.noui.data
 
 import android.util.Log
 import okhttp3.Interceptor

@@ -2,11 +2,11 @@ package kz.tarlanpayments.storage.androidsdk.sdk.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Brush
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.parseColor
 
 @Composable
-internal fun TransactionColorRs.toFormGradient() = Brush.linearGradient(
+internal fun TarlanTransactionDescriptionModel.toFormGradient() = Brush.linearGradient(
     colors = listOf(
         parseColor(color = this.mainFormColor),
         parseColor(color = this.secondaryFormColor)
@@ -14,7 +14,7 @@ internal fun TransactionColorRs.toFormGradient() = Brush.linearGradient(
 )
 
 @Composable
-internal fun TransactionColorRs.toTextGradient() = Brush.linearGradient(
+internal fun TarlanTransactionDescriptionModel.toTextGradient() = Brush.linearGradient(
     colors = listOf(
         parseColor(color = this.mainTextColor),
         parseColor(color = this.secondaryTextColor)
@@ -22,7 +22,7 @@ internal fun TransactionColorRs.toTextGradient() = Brush.linearGradient(
 )
 
 @Composable
-internal fun TransactionColorRs.toInputGradient() = Brush.linearGradient(
+internal fun TarlanTransactionDescriptionModel.toInputGradient() = Brush.linearGradient(
     colors = listOf(
         parseColor(color = this.mainInputColor),
         parseColor(color = this.secondaryInputColor)

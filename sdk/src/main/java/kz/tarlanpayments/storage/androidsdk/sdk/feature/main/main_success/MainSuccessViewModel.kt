@@ -5,10 +5,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kz.tarlanpayments.storage.androidsdk.sdk.DepsHolder
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanInstance
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionStateModel
 import kz.tarlanpayments.storage.androidsdk.sdk.core.BaseViewModel
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionRs
 
 internal sealed interface MainSuccessState {
     data object Loading : MainSuccessState
@@ -50,7 +50,7 @@ internal sealed interface MainSuccessEffect {
     data class ShowSuccess(val transactionHash: String, val transactionId: Long) : MainSuccessEffect
 
     data class Show3ds(
-        val params: HashMap<String, String>,
+        val params: Map<String, String>,
         val termUrl: String,
         val action: String, val transactionId: Long, val transactionHash: String,
         val isCardLink: Boolean
@@ -68,16 +68,16 @@ internal sealed interface MainSuccessEffect {
 internal class MainSuccessViewModel(
     private val transactionId: Long,
     private val transactionHash: String,
-    private val transactionInfoMainRs: TransactionInfoMainRs
+    private val transactionDescription: TarlanTransactionDescriptionModel
 ) : BaseViewModel<MainSuccessState, MainSuccessAction, MainSuccessEffect>(MainSuccessState.Default) {
 
-    private val repository = DepsHolder.tarlanRepository
+    private val repository = TarlanInstance.tarlanRepository
 
     override fun handleEvent(event: MainSuccessAction) {
         when (event) {
             is MainSuccessAction.FromInterface -> {
-                when (transactionInfoMainRs.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.OUT -> {
+                when (transactionDescription.type) {
+                    TarlanTransactionDescriptionModel.TransactionType.Out -> {
                         setState { MainSuccessState.Loading }
                         launchSaved {
                             val state = repository.outRq(
@@ -87,11 +87,11 @@ internal class MainSuccessViewModel(
                                 email = event.email,
                                 phone = event.phone
                             )
-                            state.result.handleState()
+                            state.handleState(transactionDescription.type)
                         }
                     }
 
-                    TransactionInfoMainRs.TransactionTypeDto.IN -> {
+                    TarlanTransactionDescriptionModel.TransactionType.In -> {
                         setState { MainSuccessState.Loading }
                         launchSaved {
                             val state = repository.inRq(
@@ -106,11 +106,11 @@ internal class MainSuccessViewModel(
                                 phone = event.phone,
                                 savaCard = event.saveCard
                             )
-                            state.result.handleState()
+                            state.handleState(transactionDescription.type)
                         }
                     }
 
-                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> {
+                    TarlanTransactionDescriptionModel.TransactionType.CardLink -> {
                         setState { MainSuccessState.Loading }
                         launchSaved {
                             val state = repository.cardLink(
@@ -125,15 +125,15 @@ internal class MainSuccessViewModel(
                                 phone = event.phone,
 
                                 )
-                            state.result.handleState()
+                            state.handleState(transactionDescription.type)
                         }
                     }
                 }
             }
 
             is MainSuccessAction.FromSavedCard -> {
-                when (transactionInfoMainRs.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.OUT -> {
+                when (transactionDescription.type) {
+                    TarlanTransactionDescriptionModel.TransactionType.Out -> {
                         setState { MainSuccessState.Loading }
                         launchSaved {
                             val state = repository.outFromSaved(
@@ -143,11 +143,11 @@ internal class MainSuccessViewModel(
                                 phone = event.phone,
                                 encryptedId = event.encryptedId
                             )
-                            state.result.handleState()
+                            state.handleState(transactionDescription.type)
                         }
                     }
 
-                    TransactionInfoMainRs.TransactionTypeDto.IN -> {
+                    TarlanTransactionDescriptionModel.TransactionType.In -> {
                         setState { MainSuccessState.Loading }
                         launchSaved {
                             val state = repository.inFromSavedRq(
@@ -157,9 +157,11 @@ internal class MainSuccessViewModel(
                                 phone = event.phone,
                                 encryptedId = event.encryptedId
                             )
-                            state.result.handleState()
+                            state.handleState(transactionDescription.type)
                         }
                     }
+
+                    else -> Unit
                 }
             }
 
@@ -171,7 +173,7 @@ internal class MainSuccessViewModel(
                         hash = transactionHash,
                         paymentMethodData = event.paymentMethodData,
                     )
-                    state.result.handleState()
+                    state.handleState(transactionDescription.type)
                 }
             }
 
@@ -192,11 +194,11 @@ internal class MainSuccessViewModel(
         }
     }
 
-    private fun TransactionRs.handleState() {
+    private fun TarlanTransactionStateModel.handleState(type: TarlanTransactionDescriptionModel.TransactionType) {
         setState { MainSuccessState.Default }
 
-        when (this.transactionStatusCode) {
-            TransactionRs.Success -> {
+        when (this) {
+            is TarlanTransactionStateModel.Success -> {
                 setEffect {
                     MainSuccessEffect.ShowSuccess(
                         transactionHash,
@@ -205,24 +207,24 @@ internal class MainSuccessViewModel(
                 }
             }
 
-            TransactionRs.ThreeDsWaiting -> {
+            is TarlanTransactionStateModel.Waiting3DS -> {
                 setEffect {
                     MainSuccessEffect.Show3ds(
-                        termUrl = this.threeDs?.termUrl ?: "",
-                        action = this.threeDs?.action ?: "",
-                        params = this.threeDs?.params ?: hashMapOf(),
+                        termUrl = this.termUrl,
+                        action = this.action,
+                        params = this.params,
                         transactionHash = transactionHash,
                         transactionId = transactionId,
-                        isCardLink = transactionInfoMainRs.transactionType.code == TransactionInfoMainRs.TransactionTypeDto.CARD_LINK
+                        isCardLink = type == TarlanTransactionDescriptionModel.TransactionType.CardLink
                     )
                 }
             }
 
-            TransactionRs.Fingerprint -> {
+            is TarlanTransactionStateModel.FingerPrint -> {
                 setEffect {
                     MainSuccessEffect.ShowFingerprint(
-                        methodData = this.fingerprint?.methodData ?: "",
-                        action = this.fingerprint?.methodUrl ?: "",
+                        methodData = this.methodData,
+                        action = this.methodUrl,
                         transactionHash = transactionHash,
                         transactionId = transactionId
                     )
@@ -252,7 +254,7 @@ internal class MainSuccessViewModel(
     }
 
     internal class MainSuccessViewModelFactory(
-        private val transactionInfoMainRs: TransactionInfoMainRs,
+        private val transactionDescription: TarlanTransactionDescriptionModel,
         private val transactionId: Long,
         private val transactionHash: String
     ) : ViewModelProvider.Factory {
@@ -260,7 +262,7 @@ internal class MainSuccessViewModel(
             return MainSuccessViewModel(
                 transactionId = transactionId,
                 transactionHash = transactionHash,
-                transactionInfoMainRs = transactionInfoMainRs
+                transactionDescription = transactionDescription
             ) as T
         }
     }

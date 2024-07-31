@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
@@ -23,12 +24,12 @@ import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.PaymentDataRequest
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSFragment
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSV2Fragment
 import kz.tarlanpayments.storage.androidsdk.sdk.GooglePayFacade
 import kz.tarlanpayments.storage.androidsdk.sdk.TarlanActivity
 import kz.tarlanpayments.storage.androidsdk.sdk.TarlanScreens
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormRs
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.classic.MainSuccessClassic
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationErrorType
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationUtils
@@ -38,9 +39,7 @@ import org.json.JSONObject
 internal fun MainSuccessView(
     transactionId: Long,
     transactionHash: String,
-    transactionInfoMainRs: TransactionInfoMainRs,
-    transactionInfoPayFormRs: TransactionInfoPayFormRs,
-    transactionColorRs: TransactionColorRs,
+    transactionDescription: TarlanTransactionDescriptionModel,
     fragment: Fragment,
     googlePayFacade: GooglePayFacade
 ) {
@@ -48,19 +47,18 @@ internal fun MainSuccessView(
     var isGooglePayClickEnabled by remember { mutableStateOf(true) }
     var isPhoneCanUserGooglePay by remember { mutableStateOf(false) }
     var isGooglePayNow by remember { mutableStateOf(false) }
-    var savedCards by remember { mutableStateOf(transactionInfoMainRs.cards) }
+    var savedCards by remember { mutableStateOf(transactionDescription.cards) }
 
 
     val viewModel = viewModel<MainSuccessViewModel>(
         factory = MainSuccessViewModel.MainSuccessViewModelFactory(
-            transactionInfoMainRs = transactionInfoMainRs,
+            transactionDescription = transactionDescription,
             transactionId = transactionId,
             transactionHash = transactionHash
         )
     )
     val controller = FormController(
-        transactionInfoMainRs = transactionInfoMainRs,
-        transactionInfoPayFormRs = transactionInfoPayFormRs,
+        transactionDescription = transactionDescription,
         isPhoneCanUseGooglePay = isPhoneCanUserGooglePay,
     )
 
@@ -129,6 +127,14 @@ internal fun MainSuccessView(
                 }
 
                 is MainSuccessEffect.Show3ds -> {
+                    fragment.setFragmentResultListener(Tarlan3DSFragment.TARLAN_3DS_REQUEST_KEY) { _, bundle ->
+                        TarlanActivity.router.newRootScreen(
+                            TarlanScreens.Status(
+                                it.transactionId,
+                                it.transactionHash
+                            )
+                        )
+                    }
                     TarlanActivity.router.newRootScreen(
                         TarlanScreens.ThreeDs(
                             termUrl = it.termUrl,
@@ -141,6 +147,14 @@ internal fun MainSuccessView(
                 }
 
                 is MainSuccessEffect.ShowFingerprint -> {
+                    fragment.setFragmentResultListener(Tarlan3DSV2Fragment.TARLAN_3DS_REQUEST_KEY) { _, bundle ->
+                        TarlanActivity.router.newRootScreen(
+                            TarlanScreens.Status(
+                                it.transactionId,
+                                it.transactionHash
+                            )
+                        )
+                    }
                     TarlanActivity.router.newRootScreen(
                         TarlanScreens.Fingerprint(
                             methodData = it.methodData,
@@ -237,17 +251,17 @@ internal fun MainSuccessView(
     }
 
     fun requestGooglePay(
-        transactionInfoMainRs: TransactionInfoMainRs,
+        transactionDescription: TarlanTransactionDescriptionModel,
         googlePayFacade: GooglePayFacade,
     ) {
         isGooglePayClickEnabled = false
-        val price = transactionInfoMainRs.totalAmount
+        val price = transactionDescription.totalAmount
         val paymentDataRequestJson = googlePayFacade.getPaymentDataRequest(price) ?: return
         val request = PaymentDataRequest.fromJson(paymentDataRequestJson.toString())
         val task = googlePayFacade.paymentsClient!!.loadPaymentData(request)
         task.addOnCompleteListener { completedTask ->
             if (completedTask.isSuccessful) {
-                completedTask.result.let(::handlePaymentSuccess)
+                completedTask.result?.let(::handlePaymentSuccess)
             } else {
                 when (val exception = completedTask.exception) {
                     is ResolvableApiException -> {
@@ -301,9 +315,7 @@ internal fun MainSuccessView(
         fragmentManager = fragment.childFragmentManager,
         focusRequester = focusRequesters,
         transactionId = transactionId,
-        transactionInfoMainRs = transactionInfoMainRs,
-        transactionInfoPayFormRs = transactionInfoPayFormRs,
-        transactionColorRs = transactionColorRs,
+        transactionDescription = transactionDescription,
         mainSuccessController = controller,
         cardNumberTextFieldValue = cardNumberTextFieldValue,
         onCardNumberChanged = {
@@ -409,19 +421,19 @@ internal fun MainSuccessView(
         emailError = emailError,
         cardHolderError = cardHolderError,
         phoneError = phoneError,
-        isSavedCardChanged = { token, cardNumber ->
-            if (token.isNotEmpty() && cardNumber.isNotEmpty()) {
-                isSavedCardClicked = true
-                savedCardToken = token
-                savedCardNumber = TextFieldValue(cardNumber.filter { it.isDigit() || it == 'X' }
-                    .replace('X', '*'))
-            } else {
-                isSavedCardClicked = false
-                savedCardToken = ""
-                savedCardNumber = TextFieldValue("")
-            }
-
+        onSavedCardChanged = { token, cardNumber ->
+            isSavedCardClicked = true
+            savedCardToken = token
+            savedCardNumber = TextFieldValue(cardNumber.filter { it.isDigit() || it == 'X' }
+                .replace('X', '*'))
             cardNumberError = ValidationErrorType.Valid
+        },
+        onNewCardClicked = {
+            isSavedCardClicked = false
+            savedCardToken = ""
+            savedCardNumber = TextFieldValue("")
+            cardNumberError = ValidationErrorType.Valid
+            cardNumberTextFieldValue = TextFieldValue("")
         },
         isSavedCardNumber = savedCardNumber,
         onSaveCardChanged = { isSaveCard = it },
@@ -430,7 +442,7 @@ internal fun MainSuccessView(
         isEnabled = true,
         isProgress = state is MainSuccessState.Loading,
         onGooglePayClick = {
-            requestGooglePay(transactionInfoMainRs, googlePayFacade)
+            requestGooglePay(transactionDescription, googlePayFacade)
         },
         onPayClick = {
             if (canSend())
@@ -455,13 +467,14 @@ internal fun MainSuccessView(
                 isSavedCardClicked = false
                 savedCardToken = ""
                 savedCardNumber = TextFieldValue("")
+                cardNumberTextFieldValue = TextFieldValue("")
             }
 
             cardNumberError = ValidationErrorType.Valid
 
             viewModel.setAction(
                 MainSuccessAction.DeleteCard(
-                    projectId = transactionInfoMainRs.projectId,
+                    projectId = transactionDescription.projectID,
                     cardId = cardToken,
                 )
             )

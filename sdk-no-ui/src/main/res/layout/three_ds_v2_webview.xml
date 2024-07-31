@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <kz.tarlanpayments.storage.androidsdk.sdk.feature.threeds.ThreeDsV2WebView
+    <kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSV2Webview
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

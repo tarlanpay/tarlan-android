@@ -6,7 +6,6 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -17,3 +16,4 @@ dependencyResolutionManagement {
 rootProject.name = "TarlanPaymnet"
 include(":sample")
 include(":sdk")
+include(":sdk-no-ui")

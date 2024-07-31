@@ -1,38 +1,30 @@
 package kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success
 
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormRs
-
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
 
 internal class FormController(
-    transactionInfoMainRs: TransactionInfoMainRs,
-    transactionInfoPayFormRs: TransactionInfoPayFormRs,
+    transactionDescription: TarlanTransactionDescriptionModel,
     isPhoneCanUseGooglePay: Boolean,
 ) {
 
     val isCardHolderVisible =
-        transactionInfoMainRs.transactionType.code != TransactionInfoMainRs.TransactionTypeDto.OUT
-
+        transactionDescription.type != TarlanTransactionDescriptionModel.TransactionType.Out
     val isPanVisible = true
     val isCvvVisible =
-        transactionInfoMainRs.transactionType.code != TransactionInfoMainRs.TransactionTypeDto.OUT
-
+        transactionDescription.type != TarlanTransactionDescriptionModel.TransactionType.Out
     val isExpDate =
-        transactionInfoMainRs.transactionType.code != TransactionInfoMainRs.TransactionTypeDto.OUT
+        transactionDescription.type != TarlanTransactionDescriptionModel.TransactionType.Out
 
-    val isGooglePlayVisible = isPhoneCanUseGooglePay &&
-            transactionInfoMainRs.transactionType.code != TransactionInfoMainRs.TransactionTypeDto.CARD_LINK
-            &&
-            transactionInfoMainRs.availableTypes.find { it.code == TransactionInfoMainRs.TransactionAvailableTypesDto.GooglePay } != null
+    val isGooglePlayVisible = transactionDescription.hasGooglePay && isPhoneCanUseGooglePay
 
     val isSaveCardVisible =
-        transactionInfoMainRs.transactionType.code == TransactionInfoMainRs.TransactionTypeDto.IN
+        transactionDescription.type != TarlanTransactionDescriptionModel.TransactionType.In
     val isSavedCardVisible =
-        transactionInfoMainRs.transactionType.code != TransactionInfoMainRs.TransactionTypeDto.CARD_LINK
+        transactionDescription.type != TarlanTransactionDescriptionModel.TransactionType.CardLink
 
-    val isShowEmail = transactionInfoPayFormRs.requiredEmail || transactionInfoPayFormRs.hasEmail
-    val isEmailRequired = transactionInfoPayFormRs.requiredEmail
-    val isShowPhone = transactionInfoPayFormRs.requiredPhone || transactionInfoPayFormRs.hasPhone
-    val isPhoneRequired = transactionInfoPayFormRs.requiredPhone
-    val hasDefaultCard = transactionInfoPayFormRs.hasDefaultCard
+    val isShowEmail = transactionDescription.requiredEmail || transactionDescription.hasEmail
+    val isEmailRequired = transactionDescription.requiredEmail
+    val isShowPhone = transactionDescription.requiredPhone || transactionDescription.hasPhone
+    val isPhoneRequired = transactionDescription.requiredPhone
+    val hasDefaultCard = transactionDescription.hasDefaultCard
 }

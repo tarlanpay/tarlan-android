@@ -17,9 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
 import kz.tarlanpayments.storage.androidsdk.TarlanInput
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSFragment
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSV2Fragment
 import kz.tarlanpayments.storage.androidsdk.sdk.GooglePayFacade
 import kz.tarlanpayments.storage.androidsdk.sdk.TarlanActivity
 import kz.tarlanpayments.storage.androidsdk.sdk.TarlanScreens
@@ -93,9 +96,7 @@ internal class MainFragment : Fragment() {
                 MainSuccessView(
                     transactionId = launcher.transactionId,
                     transactionHash = launcher.hash,
-                    transactionInfoMainRs = currentState.mainInfo,
-                    transactionInfoPayFormRs = currentState.payFormRs,
-                    transactionColorRs = currentState.colorsDto,
+                    transactionDescription = currentState.transactionDescription,
                     fragment = fragment,
                     googlePayFacade = googlePayFacade
                 )
@@ -124,6 +125,14 @@ internal class MainFragment : Fragment() {
                     }
 
                     is MainEffect.Show3ds -> {
+                        setFragmentResultListener(Tarlan3DSFragment.TARLAN_3DS_REQUEST_KEY) { _, bundle ->
+                            TarlanActivity.router.newRootScreen(
+                                TarlanScreens.Status(
+                                    it.transactionId,
+                                    it.hash
+                                )
+                            )
+                        }
                         TarlanActivity.router.newRootScreen(
                             TarlanScreens.ThreeDs(
                                 termUrl = it.termUrl,
@@ -136,6 +145,14 @@ internal class MainFragment : Fragment() {
                     }
 
                     is MainEffect.ShowFingerprint -> {
+                        setFragmentResultListener(Tarlan3DSV2Fragment.TARLAN_3DS_REQUEST_KEY) { _, bundle ->
+                            TarlanActivity.router.newRootScreen(
+                                TarlanScreens.Status(
+                                    it.transactionId,
+                                    it.hash
+                                )
+                            )
+                        }
                         TarlanActivity.router.newRootScreen(
                             TarlanScreens.Fingerprint(
                                 methodData = it.methodData,

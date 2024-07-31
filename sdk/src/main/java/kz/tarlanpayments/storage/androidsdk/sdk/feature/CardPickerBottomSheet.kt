@@ -46,20 +46,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import kz.tarlanpayments.storage.androidsdk.R
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
 import kz.tarlanpayments.storage.androidsdk.sdk.provideCurrentLocale
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.theme.KitTheme
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.parseColor
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
 
 internal class CardPickerBottomSheet : BottomSheetDialogFragment() {
 
     @Parcelize
     data class Launcher(
-        val transactionColorRs: TransactionColorRs,
-        val savedCard: List<TransactionInfoMainRs.CardDto>,
+        val transactionColorRs: TarlanTransactionDescriptionModel,
+        val savedCard: List<TarlanTransactionDescriptionModel.SavedCard>,
     ) : Parcelable
 
     companion object {
@@ -194,7 +193,7 @@ internal class CardPickerBottomSheet : BottomSheetDialogFragment() {
 private fun ShowCard(
     onSelectCard: (String, String) -> Unit,
     onCardRemoved: (String, String) -> Unit,
-    card: TransactionInfoMainRs.CardDto,
+    card: TarlanTransactionDescriptionModel.SavedCard,
     launcher: CardPickerBottomSheet.Launcher,
     onDismiss: () -> Unit,
 ) {

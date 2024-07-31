@@ -6,21 +6,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import kotlinx.coroutines.launch
-import kz.tarlanpayments.storage.androidsdk.sdk.DepsHolder
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanInstance
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionStateModel
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionStatusModel
 import kz.tarlanpayments.storage.androidsdk.sdk.core.BaseViewModel
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionRs
 
 internal sealed interface MainState {
     data object Loading : MainState
 
-    data class Success(
-        val colorsDto: TransactionColorRs,
-        val payFormRs: TransactionInfoPayFormRs,
-        val mainInfo: TransactionInfoMainRs
-    ) : MainState
+    data class Success(val transactionDescription: TarlanTransactionDescriptionModel) : MainState
 
     data object Error : MainState
 }
@@ -42,7 +37,7 @@ internal sealed interface MainEffect {
     data class Show3ds(
         val termUrl: String,
         val action: String,
-        val params: HashMap<String, String>,
+        val params: Map<String, String>,
         override val transactionId: Long,
         override val hash: String
     ) : MainEffect
@@ -62,7 +57,7 @@ internal class MainViewModel(
 ) :
     BaseViewModel<MainState, Unit, MainEffect>(MainState.Loading) {
 
-    private val repository by lazy { DepsHolder.tarlanRepository }
+    private val repository by lazy { TarlanInstance.tarlanRepository }
 
     init {
         when (isResume) {
@@ -77,8 +72,7 @@ internal class MainViewModel(
                 repository.resumeTransaction(
                     transactionId = transactionId,
                     hash = hash
-                )
-                    .result.handleState()
+                ).handleState()
             } catch (e: Exception) {
                 Log.e(e.message, e.stackTraceToString())
                 setEffect {
@@ -89,23 +83,24 @@ internal class MainViewModel(
     }
 
     private fun getTransaction() {
+        Log.d("TarlanOutput", "getTransaction: $transactionId, $hash")
         viewModelScope.launch {
             try {
                 val result = repository.getTransactionStatus(
                     transactionId = transactionId,
                     hash = hash
                 )
-
-                if (result.transactionInfoMain.isTransactionCompleted()) {
-                    result.transactionInfoMain.doTransactionCompleted()
+                if (result.isTransactionCompleted()) {
+                    Log.d("TarlanOutput", "isTransactionCompleted true")
+                    result.doTransactionCompleted()
                 } else {
-                    setState {
-                        MainState.Success(
-                            result.transactionColor,
-                            result.transactionPayForm,
-                            result.transactionInfoMain
-                        )
-                    }
+                    Log.d("TarlanOutput", "isTransactionCompleted false")
+                    val transactionDescription = repository.getTransactionDescription(
+                        transactionId = transactionId,
+                        hash = hash
+                    )
+                    Log.d("TarlanOutput", "isTransactionCompleted false")
+                    setState { MainState.Success(transactionDescription) }
                 }
             } catch (e: Exception) {
                 Log.e(e.message, e.stackTraceToString())
@@ -114,31 +109,28 @@ internal class MainViewModel(
         }
     }
 
-    private fun TransactionRs.handleState() {
-        when (this.transactionStatusCode) {
-            TransactionRs.Success -> setEffect {
-                MainEffect.ShowSuccess(
-                    transactionId,
-                    hash
-                )
+    private fun TarlanTransactionStateModel.handleState() {
+        when (this) {
+            is TarlanTransactionStateModel.Success -> setEffect {
+                MainEffect.ShowSuccess(transactionId, hash)
             }
 
-            TransactionRs.ThreeDsWaiting ->
+            is TarlanTransactionStateModel.Waiting3DS ->
                 setEffect {
                     MainEffect.Show3ds(
-                        termUrl = this.threeDs?.termUrl ?: "",
-                        action = this.threeDs?.action ?: "",
-                        params = this.threeDs?.params ?: hashMapOf(),
+                        termUrl = this.termUrl,
+                        action = this.action,
+                        params = this.params.toMutableMap(),
                         hash = hash,
                         transactionId = transactionId
                     )
                 }
 
-            TransactionRs.Fingerprint ->
+            is TarlanTransactionStateModel.FingerPrint ->
                 setEffect {
                     MainEffect.ShowFingerprint(
-                        methodData = this.fingerprint?.methodData ?: "",
-                        action = this.fingerprint?.methodUrl ?: "",
+                        methodData = this.methodData,
+                        action = this.methodUrl,
                         transactionId = transactionId,
                         hash = hash,
                     )
@@ -155,17 +147,9 @@ internal class MainViewModel(
         }
     }
 
-
-    private fun TransactionInfoMainRs.isTransactionCompleted(): Boolean {
-        return when (this.transactionStatus.code) {
-            TransactionInfoMainRs.TransactionStatusDto.NEW -> false
-            else -> true
-        }
-    }
-
-    private fun TransactionInfoMainRs.doTransactionCompleted() {
-        when (this.transactionStatus.code) {
-            TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
+    private fun TarlanTransactionStatusModel.doTransactionCompleted() {
+        when (this) {
+            TarlanTransactionStatusModel.Success -> {
                 setEffect {
                     MainEffect.ShowSuccess(
                         transactionId,
@@ -174,7 +158,7 @@ internal class MainViewModel(
                 }
             }
 
-            TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
+            TarlanTransactionStatusModel.Fail -> {
                 setEffect {
                     MainEffect.ShowError(
                         transactionId,
@@ -183,7 +167,7 @@ internal class MainViewModel(
                 }
             }
 
-            TransactionInfoMainRs.TransactionStatusDto.REFUND -> {
+            TarlanTransactionStatusModel.Refund -> {
                 setEffect {
                     MainEffect.ShowError(
                         transactionId,

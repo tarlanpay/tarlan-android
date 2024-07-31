@@ -10,6 +10,7 @@ import com.google.android.gms.wallet.Wallet
 import com.google.android.gms.wallet.WalletConstants
 import kotlinx.coroutines.tasks.await
 import kz.tarlanpayments.storage.androidsdk.BuildConfig
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanInstance
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -104,7 +105,7 @@ internal class GooglePayFacade {
 
     private fun createPaymentsClient(activity: Activity): PaymentsClient {
         val walletOptions = Wallet.WalletOptions.Builder()
-            .setEnvironment(if (DepsHolder.isDebug) WalletConstants.ENVIRONMENT_TEST else WalletConstants.ENVIRONMENT_PRODUCTION)
+            .setEnvironment(if (TarlanInstance.isDebug) WalletConstants.ENVIRONMENT_TEST else WalletConstants.ENVIRONMENT_PRODUCTION)
             .build()
 
         return Wallet.getPaymentsClient(activity, walletOptions)

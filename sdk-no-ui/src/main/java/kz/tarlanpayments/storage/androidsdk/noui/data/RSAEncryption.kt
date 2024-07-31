@@ -1,4 +1,4 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.data
+package kz.tarlanpayments.storage.androidsdk.noui.data
 
 import android.security.keystore.KeyProperties
 import android.util.Base64

@@ -1,4 +1,4 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.feature.threeds
+package kz.tarlanpayments.storage.androidsdk.noui.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,23 +6,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
-import kz.tarlanpayments.storage.androidsdk.R
-import kz.tarlanpayments.storage.androidsdk.sdk.TarlanActivity
-import kz.tarlanpayments.storage.androidsdk.sdk.TarlanScreens
+import androidx.fragment.app.setFragmentResult
+import kz.tarlanpayments.storage.androidsdk.noui.R
 
-internal class ThreeDsFragment : Fragment() {
+class Tarlan3DSFragment : Fragment() {
 
     companion object {
+        const val TARLAN_3DS_REQUEST_KEY = "TARLAN_3DS_REQUEST_KEY"
+        const val TARLAN_3DS_RESULT = "TARLAN_3DS_RESULT"
+
         fun newInstance(
-            params: HashMap<String, String>,
+            params: Map<String, String>,
             termUrl: String,
             action: String,
             transactionId: Long,
             transactionHash: String
-        ) = ThreeDsFragment()
+        ) = Tarlan3DSFragment()
             .apply {
                 arguments = Bundle().apply {
-                    putSerializable("params", params)
+                    putSerializable("params", HashMap(params))
                     putString("termUrl", termUrl)
                     putString("action", action)
                     putLong("transactionId", transactionId)
@@ -42,7 +44,7 @@ internal class ThreeDsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val webView = view.findViewById<ThreeDsWebView>(R.id.webView)
+        val webView = view.findViewById<Tarlan3DSWebview>(R.id.webView)
         val progressBar = view.findViewById<FrameLayout>(R.id.progressBar)
         webView.authorize(
             params = requireArguments().getSerializable(
@@ -53,7 +55,7 @@ internal class ThreeDsFragment : Fragment() {
             redirectUrl = "https://process.tarlanpayments.kz/"
         )
 
-        webView.authListener = object : ThreeDsWebView.Listener {
+        webView.authListener = object : Tarlan3DSWebview.Listener {
             override fun on3dsPageLoading() {
                 progressBar.visibility = View.VISIBLE
             }
@@ -63,12 +65,9 @@ internal class ThreeDsFragment : Fragment() {
             }
 
             override fun onSuccess() {
-                TarlanActivity.router.newRootScreen(
-                    TarlanScreens.Status(
-                        requireArguments().getLong("transactionId"),
-                        requireArguments().getString("transactionHash")!!
-                    )
-                )
+                setFragmentResult(TARLAN_3DS_REQUEST_KEY, Bundle().apply {
+                    putBoolean("TARLAN_3DS_RESULT", true)
+                })
             }
         }
     }

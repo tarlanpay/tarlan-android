@@ -34,8 +34,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            var hashField by remember { mutableStateOf("") }
-            var transactionId by remember { mutableStateOf("") }
+            var hashField by remember { mutableStateOf("\$2a\$10\$7HsI88jdhnwVcmEz8Wd3teKT1.mC4Qj5AjoYRVQLie4pK8qF4fxhC") }
+            var transactionId by remember { mutableStateOf("252467807") }
 
             Column {
                 Text(text = "Enter hash")

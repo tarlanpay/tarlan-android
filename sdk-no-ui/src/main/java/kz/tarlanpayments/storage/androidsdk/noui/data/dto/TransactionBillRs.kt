@@ -1,8 +1,7 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.data.dto
+package kz.tarlanpayments.storage.androidsdk.noui.data.dto
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-
 
 internal data class TransactionBillRs(
     @SerializedName("transaction_id") @Expose val transactionId: Long,

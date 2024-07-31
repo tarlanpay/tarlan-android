@@ -4,8 +4,8 @@ import com.github.terrakok.cicerone.androidx.FragmentScreen
 import kz.tarlanpayments.storage.androidsdk.TarlanInput
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.MainFragment
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.status.StatusFragment
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.threeds.ThreeDsFragment
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.threeds.ThreeDsV2Fragment
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSFragment
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSV2Fragment
 
 internal object TarlanScreens {
 
@@ -22,10 +22,10 @@ internal object TarlanScreens {
         action: String,
         transactionId: Long,
         transactionHash: String,
-        params: HashMap<String, String>,
+        params: Map<String, String>,
     ): FragmentScreen {
         return FragmentScreen {
-            ThreeDsFragment.newInstance(
+            Tarlan3DSFragment.newInstance(
                 params = params,
                 termUrl = termUrl,
                 action = action,
@@ -42,7 +42,7 @@ internal object TarlanScreens {
         transactionHash: String,
     ): FragmentScreen {
         return FragmentScreen {
-            ThreeDsV2Fragment.newInstance(
+            Tarlan3DSV2Fragment.newInstance(
                 methodData = methodData,
                 action = action,
                 transactionId = transactionId,

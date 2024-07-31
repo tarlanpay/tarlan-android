@@ -1,8 +1,9 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.feature.threeds
+package kz.tarlanpayments.storage.androidsdk.noui.ui
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.AttributeSet
+import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -10,19 +11,22 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import okhttp3.FormBody
 import okio.Buffer
-import java.io.IOException
+import okio.IOException
 
-internal class ThreeDsV2WebView @JvmOverloads constructor(
+internal class Tarlan3DSWebview @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
 ) : WebView(context, attrs, defStyleAttr) {
 
     var authListener: Listener? = null
+    lateinit var redirectUrl: String
+    lateinit var postbackUrl: String
 
     init {
         settings.javaScriptEnabled = true
         settings.builtInZoomControls = true
+//        settings.setAppCacheEnabled (false)
         settings.cacheMode = WebSettings.LOAD_NO_CACHE
         webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
@@ -31,7 +35,13 @@ internal class ThreeDsV2WebView @JvmOverloads constructor(
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
-                authListener?.onSuccess()
+                Log.d("3DSWebView", "onPageFinished: $url")
+                if (url?.lowercase()?.contains(redirectUrl.toLowerCase()) == true) {
+                    authListener?.onSuccess()
+                } else {
+                    authListener?.on3dsPageLoaded()
+                }
+
                 super.onPageFinished(view, url)
             }
         }
@@ -45,19 +55,22 @@ internal class ThreeDsV2WebView @JvmOverloads constructor(
 
     fun authorize(
         action: String,
-        methodData: String,
+        params: Map<String, String>,
+        postbackUrl: String,
+        redirectUrl: String,
     ) {
-        val paramsBytes = buildParamsOkHttp(
-            mapOf("method_data" to methodData)
-        )
+        this.redirectUrl = redirectUrl
+        this.postbackUrl = postbackUrl
+        val paramsBytes = buildParamsOkHttp(params, this.postbackUrl)
         postUrl(action, paramsBytes)
     }
 
-    private fun buildParamsOkHttp(params: Map<String, String>): ByteArray {
+    private fun buildParamsOkHttp(params: Map<String, String>, postbackUrl: String): ByteArray {
         val encodingBuilder = FormBody.Builder()
         params.forEach { (key, value) ->
             encodingBuilder.add(key, value)
         }
+        encodingBuilder.add("TermUrl", postbackUrl)
         val formBody = encodingBuilder.build()
         val buffer = Buffer()
 
@@ -71,6 +84,8 @@ internal class ThreeDsV2WebView @JvmOverloads constructor(
 
     interface Listener {
         fun onSuccess()
+
+        fun on3dsPageLoaded()
 
         fun on3dsPageLoading()
     }

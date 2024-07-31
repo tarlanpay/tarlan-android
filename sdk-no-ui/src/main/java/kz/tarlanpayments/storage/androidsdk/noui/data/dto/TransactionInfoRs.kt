@@ -1,11 +1,8 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.data.dto
+package kz.tarlanpayments.storage.androidsdk.noui.data.dto
 
-import android.os.Parcelable
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import kotlinx.parcelize.Parcelize
 
-@Parcelize
 internal data class TransactionColorRs(
     @SerializedName("project_id") @Expose val projectId: Int,
     @SerializedName("merchant_id") @Expose val merchantId: Int,
@@ -22,7 +19,7 @@ internal data class TransactionColorRs(
     @SerializedName("secondary_modern_color") @Expose val secondaryModernColor: String,
     @SerializedName("modern_button_color") @Expose val modernButtonColor: String,
     @SerializedName("light_button_color") @Expose val lightButtonColor: String
-) : Parcelable
+)
 
 internal data class TransactionInfoMainRs(
     @SerializedName("transaction_id") @Expose val transactionId: Long,
@@ -42,11 +39,10 @@ internal data class TransactionInfoMainRs(
     @SerializedName("description") @Expose val description: String? = null
 ) {
 
-    @Parcelize
     data class CardDto(
         @SerializedName("card_token") @Expose val cardToken: String,
         @SerializedName("masked_pan") @Expose val maskedPan: String,
-    ) : Parcelable
+    )
 
     data class TransactionInfo(
         @SerializedName("callback_url") @Expose val callbackUrl: String,
@@ -74,6 +70,7 @@ internal data class TransactionInfoMainRs(
             const val IN = "in"
             const val OUT = "out"
             const val CARD_LINK = "card_link"
+            const val ONE_CLICK_PAY_IN = "one_click_pay_in"
         }
     }
 

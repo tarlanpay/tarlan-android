@@ -1,30 +1,33 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.data
+package kz.tarlanpayments.storage.androidsdk.noui.data
 
 import com.google.gson.Gson
-import kz.tarlanpayments.storage.androidsdk.sdk.DepsHolder
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.BaseResponse
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.CardLinkRq
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.DeleteCardRq
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.GooglePayRq
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.InFromSavedRq
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.InRq
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.OutFromSavedRq
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.PayoutRq
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.ResumeTransactionRq
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionBillRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionStatusRs
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanInstance
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanRepository
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionStateModel
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionStatusModel
+import kz.tarlanpayments.storage.androidsdk.noui.data.TarlanMapper.toStatus
+import kz.tarlanpayments.storage.androidsdk.noui.data.TarlanMapper.toTransactionState
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.BaseResponse
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.CardLinkRq
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.DeleteCardRq
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.GooglePayRq
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.InFromSavedRq
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.InRq
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.OutFromSavedRq
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.PayoutRq
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.ResumeTransactionRq
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.TransactionColorRs
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.TransactionInfoMainRs
+import kz.tarlanpayments.storage.androidsdk.noui.data.dto.TransactionInfoPayFormRs
 
-internal class TarlanRepository {
+internal class TarlanRepositoryImpl : TarlanRepository {
 
-    private val apiService: TarlanApi = DepsHolder.retrofit
-    private val mrapiService: TarlanApi = DepsHolder.mrapi
+    private val apiService: TarlanApi = TarlanInstance.retrofit
+    private val mrapiService: TarlanApi = TarlanInstance.mrapi
     private val gson: Gson = Gson()
 
-    suspend fun inRq(
+    override suspend fun inRq(
         transactionId: Long,
         hash: String,
         cardNumber: String,
@@ -32,10 +35,10 @@ internal class TarlanRepository {
         month: String,
         year: String,
         cardHolder: String,
-        email: String? = null,
-        phone: String? = null,
-        savaCard: Boolean = false
-    ): BaseResponse<TransactionRs> {
+        email: String?,
+        phone: String?,
+        savaCard: Boolean
+    ): TarlanTransactionStateModel {
         val publicKey = apiService.getPublicKey().result
         val valueToEncrypt = gson.toJson(
             InRq.ValueToEncrypt(
@@ -60,10 +63,10 @@ internal class TarlanRepository {
                 transactionHash = hash,
                 save = savaCard
             )
-        )
+        ).toTransactionState(transactionHash = hash, transactionId = transactionId)
     }
 
-    suspend fun cardLink(
+    override suspend fun cardLink(
         transactionId: Long,
         hash: String,
         cardNumber: String,
@@ -71,9 +74,9 @@ internal class TarlanRepository {
         month: String,
         year: String,
         cardHolder: String,
-        email: String? = null,
-        phone: String? = null,
-    ): BaseResponse<TransactionRs> {
+        email: String?,
+        phone: String?,
+    ): TarlanTransactionStateModel {
         val publicKey = apiService.getPublicKey().result
         val valueToEncrypt = gson.toJson(
             InRq.ValueToEncrypt(
@@ -98,16 +101,16 @@ internal class TarlanRepository {
                 encryptedCard = encryptedCard,
                 transactionHash = hash,
             )
-        )
+        ).toTransactionState(transactionHash = hash, transactionId = transactionId)
     }
 
-    suspend fun outRq(
+    override suspend fun outRq(
         transactionId: Long,
         hash: String,
         cardNumber: String,
-        email: String? = null,
-        phone: String? = null,
-    ): BaseResponse<TransactionRs> {
+        email: String?,
+        phone: String?,
+    ): TarlanTransactionStateModel {
         val publicKey = apiService.getPublicKey().result
         val valueToEncrypt = gson.toJson(PayoutRq.ValueToEncrypt(pan = cardNumber))
         val encryptedCard = RSAEncryption.loadPublicKeyAndEncryptData(
@@ -123,16 +126,16 @@ internal class TarlanRepository {
                 encryptedPan = encryptedCard,
                 transactionHash = hash,
             )
-        )
+        ).toTransactionState(transactionHash = hash, transactionId = transactionId)
     }
 
-    suspend fun inFromSavedRq(
+    override suspend fun inFromSavedRq(
         transactionId: Long,
         hash: String,
         encryptedId: String,
-        email: String? = null,
-        phone: String? = null,
-    ): BaseResponse<TransactionRs> {
+        email: String?,
+        phone: String?,
+    ): TarlanTransactionStateModel {
         return apiService.payInFromSaved(
             InFromSavedRq(
                 transactionId = transactionId,
@@ -141,16 +144,16 @@ internal class TarlanRepository {
                 encryptedId = encryptedId,
                 transactionHash = hash,
             )
-        )
+        ).toTransactionState(transactionHash = hash, transactionId = transactionId)
     }
 
-    suspend fun outFromSaved(
+    override suspend fun outFromSaved(
         transactionId: Long,
         hash: String,
         encryptedId: String,
-        email: String? = null,
-        phone: String? = null,
-    ): BaseResponse<TransactionRs> {
+        email: String?,
+        phone: String?,
+    ): TarlanTransactionStateModel {
         return apiService.outFromSaved(
             OutFromSavedRq(
                 transactionId = transactionId,
@@ -159,92 +162,52 @@ internal class TarlanRepository {
                 encryptedId = encryptedId,
                 transactionHash = hash,
             )
-        )
+        ).toTransactionState(transactionHash = hash, transactionId = transactionId)
     }
 
-    suspend fun googlePay(
+    override suspend fun googlePay(
         transactionId: Long,
         hash: String,
         paymentMethodData: Map<String, Any>
-    ): BaseResponse<TransactionRs> {
+    ): TarlanTransactionStateModel {
         return apiService.googlePay(
             GooglePayRq(
                 transactionId = transactionId,
                 transactionHash = hash,
                 paymentMethodData = paymentMethodData,
             )
-        )
+        ).toTransactionState(transactionHash = hash, transactionId = transactionId)
     }
 
-    suspend fun getTransactionInfo(
+    override suspend fun getTransactionStatus(
         transactionId: Long,
-        hash: String,
-    ): BaseResponse<TransactionInfoMainRs> {
+        hash: String
+    ): TarlanTransactionStatusModel {
         return apiService.getTransaction(
             transactionId = transactionId,
             hash = hash
-        )
+        ).toStatus()
     }
 
-    suspend fun getTransactionStatus(
-        transactionId: Long,
-        hash: String
-    ): TransactionStatusRs {
-        val transactionInfoDto = getTransactionInfo(transactionId, hash)
-        var transactionBillRs: TransactionBillRs? = null
-
-        if (!transactionInfoDto.status) {
-            throw Exception(transactionInfoDto.message)
-        }
-
-        if (transactionInfoDto.result.transactionStatus.code == TransactionInfoMainRs.TransactionStatusDto.REFUND ||
-            transactionInfoDto.result.transactionStatus.code == TransactionInfoMainRs.TransactionStatusDto.SUCCESS
-        ) {
-            transactionBillRs = apiService.getBill(
-                transactionId = transactionId,
-                hash = hash
-            ).result
-        }
-
-        val transactionInfo = transactionInfoDto.result
-
-        val colorsDto = getColors(
-            projectId = transactionInfoDto.result.projectId,
-            merchantId = transactionInfoDto.result.merchantId,
-        ).result
-
-        val payFormDto = getPayForm(
-            projectId = transactionInfoDto.result.projectId,
-            merchantId = transactionInfoDto.result.merchantId,
-        ).result
-
-        return TransactionStatusRs(
-            transactionColor = colorsDto,
-            transactionPayForm = payFormDto,
-            transactionInfoMain = transactionInfo,
-            transactionBillRs = transactionBillRs
-        )
-    }
-
-    suspend fun resumeTransaction(
+    override suspend fun resumeTransaction(
         transactionId: Long,
         hash: String,
-    ): BaseResponse<TransactionRs> {
+    ): TarlanTransactionStateModel {
         return apiService.resumeTransaction(
             body = ResumeTransactionRq(
                 transactionId = transactionId,
                 transactionHash = hash
             )
-        )
+        ).toTransactionState(transactionHash = hash, transactionId = transactionId)
     }
 
-    suspend fun deleteCard(
+    override suspend fun deleteCard(
         transactionId: Long,
         transactionHash: String,
         projectId: Long,
         encryptedCardId: String,
-    ): BaseResponse<Unit> {
-        return apiService
+    ) {
+        apiService
             .deleteCard(
                 body = DeleteCardRq(
                     transactionId = transactionId,
@@ -253,6 +216,38 @@ internal class TarlanRepository {
                     projectId = projectId
                 )
             )
+    }
+
+    override suspend fun getTransactionDescription(
+        transactionId: Long,
+        hash: String
+    ): TarlanTransactionDescriptionModel {
+        val transactionStatus = getTransactionStatus(transactionId, hash)
+        val transactionInfo = getTransactionInfo(transactionId, hash).result
+
+        val transactionBill = when (transactionStatus) {
+            TarlanTransactionStatusModel.Success, TarlanTransactionStatusModel.Refund ->
+                apiService.getBill(transactionId = transactionId, hash = hash).result
+
+            else -> null
+        }
+        val transactionColor = getColors(
+            projectId = transactionInfo.projectId,
+            merchantId = transactionInfo.merchantId,
+        ).result
+        val transactionInfoPayForm = getPayForm(
+            projectId = transactionInfo.projectId,
+            merchantId = transactionInfo.merchantId
+        ).result
+
+
+        return TarlanMapper.mapToDescriptionModel(
+            transactionInfo = transactionInfo,
+            transactionStatus = transactionStatus,
+            transactionInfoPayForm = transactionInfoPayForm,
+            transactionColor = transactionColor,
+            transactionBill = transactionBill
+        )
     }
 
     private suspend fun getColors(
@@ -272,6 +267,16 @@ internal class TarlanRepository {
         return mrapiService.getPayForm(
             projectId = projectId,
             merchantId = merchantId,
+        )
+    }
+
+    private suspend fun getTransactionInfo(
+        transactionId: Long,
+        hash: String,
+    ): BaseResponse<TransactionInfoMainRs> {
+        return apiService.getTransaction(
+            transactionId = transactionId,
+            hash = hash
         )
     }
 }

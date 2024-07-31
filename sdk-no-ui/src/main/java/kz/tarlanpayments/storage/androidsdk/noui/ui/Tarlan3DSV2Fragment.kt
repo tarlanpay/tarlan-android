@@ -1,4 +1,4 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.feature.threeds
+package kz.tarlanpayments.storage.androidsdk.noui.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,20 +6,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
-import kz.tarlanpayments.storage.androidsdk.R
-import kz.tarlanpayments.storage.androidsdk.TarlanInput
-import kz.tarlanpayments.storage.androidsdk.sdk.TarlanActivity
-import kz.tarlanpayments.storage.androidsdk.sdk.TarlanScreens
+import androidx.fragment.app.setFragmentResult
+import kz.tarlanpayments.storage.androidsdk.noui.R
 
-internal class ThreeDsV2Fragment : Fragment() {
+class Tarlan3DSV2Fragment : Fragment() {
 
     companion object {
+        const val TARLAN_3DS_REQUEST_KEY = "TARLAN_3DS_REQUEST_KEY"
+        const val TARLAN_3DS_RESULT = "TARLAN_3DS_RESULT"
         fun newInstance(
             methodData: String,
             action: String,
             transactionId: Long,
             transactionHash: String
-        ) = ThreeDsV2Fragment()
+        ) = Tarlan3DSV2Fragment()
             .apply {
                 arguments = Bundle().apply {
                     putString("methodData", methodData)
@@ -41,28 +41,22 @@ internal class ThreeDsV2Fragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val webView = view.findViewById<ThreeDsV2WebView>(R.id.webView)
+        val webView = view.findViewById<Tarlan3DSV2Webview>(R.id.webView)
         val progressBar = view.findViewById<FrameLayout>(R.id.progressBar)
         webView.authorize(
             action = requireArguments().getString("action")!!,
             methodData = requireArguments().getString("methodData")!!
         )
 
-        webView.authListener = object : ThreeDsV2WebView.Listener {
+        webView.authListener = object : Tarlan3DSV2Webview.Listener {
             override fun on3dsPageLoading() {
                 progressBar.visibility = View.VISIBLE
             }
 
             override fun onSuccess() {
-                TarlanActivity.router.newRootScreen(
-                    TarlanScreens.MainScreen(
-                        input = TarlanInput(
-                            transactionId = requireArguments().getLong("transactionId"),
-                            hash = requireArguments().getString("transactionHash")!!
-                        ),
-                        isResume = true
-                    )
-                )
+                setFragmentResult(Tarlan3DSFragment.TARLAN_3DS_REQUEST_KEY, Bundle().apply {
+                    putBoolean("TARLAN_3DS_RESULT", true)
+                })
             }
         }
     }

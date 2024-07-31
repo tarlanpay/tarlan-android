@@ -37,11 +37,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentManager
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.CardPickerBottomSheet
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.FormController
+import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.visual_transformation.CardNumberVisualTransformation
+import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitTextField
+import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.parseColor
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationErrorType
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.cardHolderValidationErrorText
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.cardValidationErrorText
@@ -49,9 +51,6 @@ import kz.tarlanpayments.storage.androidsdk.sdk.utils.cvvValidationErrorText
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.monthValidationErrorText
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
 import kz.tarlanpayments.storage.androidsdk.sdk.utils.toInputGradient
-import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.visual_transformation.CardNumberVisualTransformation
-import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitTextField
-import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.parseColor
 
 @Composable
 internal fun MainSuccessClassicCard(
@@ -59,8 +58,8 @@ internal fun MainSuccessClassicCard(
     focusRequester: Map<String, FocusRequester>,
     fragmentManager: FragmentManager,
 
-    transactionColorRs: TransactionColorRs,
-    savedCard: List<TransactionInfoMainRs.CardDto>,
+    transactionDescription: TarlanTransactionDescriptionModel,
+    savedCard: List<TarlanTransactionDescriptionModel.SavedCard>,
 
     cardNumberError: ValidationErrorType,
     cardExpireDateError: ValidationErrorType,
@@ -80,11 +79,12 @@ internal fun MainSuccessClassicCard(
     isSaveCard: Boolean,
 
     onSaveCardChanged: (Boolean) -> Unit,
+    onNewCardClicked: () -> Unit,
     secondaryColor: Color,
 
     currentLocale: String,
     isSavedCardUse: Boolean,
-    isSavedCardChanged: (String, String) -> Unit,
+    onSavedCardChanged: (String, String) -> Unit,
     isSavedCardNumber: TextFieldValue,
     onCardRemoved: (String) -> Unit,
 ): @Composable ColumnScope.() -> Unit = {
@@ -92,7 +92,7 @@ internal fun MainSuccessClassicCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(transactionColorRs.toFormGradient(), RoundedCornerShape(10.dp))
+            .background(transactionDescription.toFormGradient(), RoundedCornerShape(10.dp))
             .padding(4.dp)
     ) {
         if (controller.isPanVisible) {
@@ -102,15 +102,15 @@ internal fun MainSuccessClassicCard(
                     errorText = cardNumberError.cardValidationErrorText(currentLocale),
                     showError = cardNumberError != ValidationErrorType.Valid,
                     value = if (isSavedCardUse) isSavedCardNumber else cardNumberTextFieldValue,
-                    textColor = parseColor(color = transactionColorRs.mainTextInputColor),
+                    textColor = parseColor(color = transactionDescription.mainTextInputColor),
                     labelText = Localization.getString(
                         Localization.KeyCardNumber,
                         locale = currentLocale
                     ),
                     readOnly = isSavedCardUse,
-                    backgroundBrush = transactionColorRs.toInputGradient(),
+                    backgroundBrush = transactionDescription.toInputGradient(),
                     onValueChange = onCardNumberChanged,
-                    labelColor = parseColor(color = transactionColorRs.inputLabelColor),
+                    labelColor = parseColor(color = transactionDescription.inputLabelColor),
                     trailingIcon = {
                         if (controller.isSavedCardVisible && savedCard.isNotEmpty())
                             Icon(
@@ -119,7 +119,7 @@ internal fun MainSuccessClassicCard(
                                     .clickable {
                                         val fragment = CardPickerBottomSheet.newInstance(
                                             launcher = CardPickerBottomSheet.Launcher(
-                                                transactionColorRs = transactionColorRs,
+                                                transactionColorRs = transactionDescription,
                                                 savedCard = savedCard
                                             )
                                         )
@@ -129,18 +129,18 @@ internal fun MainSuccessClassicCard(
                                         }
 
                                         fragment.onSelectCard = { cardToken, cardNumber ->
-                                            isSavedCardChanged(cardToken, cardNumber)
+                                            onSavedCardChanged(cardToken, cardNumber)
                                         }
 
                                         fragment.onNewCardClicked = {
-                                            isSavedCardChanged("", "")
+                                            onNewCardClicked()
                                         }
 
                                         fragment.show(fragmentManager, "CardPickerBottomSheet")
                                     },
                                 imageVector = Icons.Default.KeyboardArrowDown,
                                 contentDescription = "",
-                                tint = parseColor(color = transactionColorRs.mainTextInputColor)
+                                tint = parseColor(color = transactionDescription.mainTextInputColor)
                             )
                     },
                     keyboardOptions = KeyboardOptions(
@@ -167,11 +167,11 @@ internal fun MainSuccessClassicCard(
                             locale = currentLocale
                         ),
                         style = TextStyle(
-                            color = parseColor(color = transactionColorRs.inputLabelColor),
+                            color = parseColor(color = transactionDescription.inputLabelColor),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.W400
                         ),
-                        color = parseColor(color = transactionColorRs.inputLabelColor)
+                        color = parseColor(color = transactionDescription.inputLabelColor)
                     )
                     Column {
                         Row {
@@ -185,10 +185,10 @@ internal fun MainSuccessClassicCard(
                                     horizontalPadding = 0.dp,
                                     verticalPadding = 0.dp,
                                     value = monthNumberTextFieldValue,
-                                    textColor = parseColor(color = transactionColorRs.mainTextInputColor),
-                                    backgroundBrush = transactionColorRs.toInputGradient(),
+                                    textColor = parseColor(color = transactionDescription.mainTextInputColor),
+                                    backgroundBrush = transactionDescription.toInputGradient(),
                                     onValueChange = onMonthNumberChanged,
-                                    labelColor = parseColor(color = transactionColorRs.inputLabelColor),
+                                    labelColor = parseColor(color = transactionDescription.inputLabelColor),
                                     keyboardOptions = KeyboardOptions(
                                         keyboardType = KeyboardType.Number,
                                         imeAction = ImeAction.Next
@@ -206,10 +206,10 @@ internal fun MainSuccessClassicCard(
                                     textFieldModifier = Modifier
                                         .focusRequester(focusRequester["yearNumber"]!!),
                                     value = yearNumberTextFieldValue,
-                                    textColor = parseColor(color = transactionColorRs.mainTextInputColor),
-                                    backgroundBrush = transactionColorRs.toInputGradient(),
+                                    textColor = parseColor(color = transactionDescription.mainTextInputColor),
+                                    backgroundBrush = transactionDescription.toInputGradient(),
                                     onValueChange = onYearNumberChanged,
-                                    labelColor = parseColor(color = transactionColorRs.inputLabelColor),
+                                    labelColor = parseColor(color = transactionDescription.inputLabelColor),
                                     keyboardOptions = KeyboardOptions(
                                         keyboardType = KeyboardType.Number,
                                         imeAction = ImeAction.Next
@@ -249,14 +249,14 @@ internal fun MainSuccessClassicCard(
                         textFieldModifier = Modifier
                             .focusRequester(focusRequester["cvvNumber"]!!),
                         value = cvvNumberTextFieldValue,
-                        textColor = parseColor(color = transactionColorRs.mainTextInputColor),
+                        textColor = parseColor(color = transactionDescription.mainTextInputColor),
                         labelText = Localization.getString(
                             Localization.KeyCvv,
                             locale = currentLocale
                         ),
-                        backgroundBrush = transactionColorRs.toInputGradient(),
+                        backgroundBrush = transactionDescription.toInputGradient(),
                         onValueChange = onCvvNumberChanged,
-                        labelColor = parseColor(color = transactionColorRs.inputLabelColor),
+                        labelColor = parseColor(color = transactionDescription.inputLabelColor),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Next
@@ -272,14 +272,14 @@ internal fun MainSuccessClassicCard(
             KitTextField(
                 textFieldModifier = Modifier.focusRequester(focusRequester["cardHolder"]!!),
                 value = cardHolderTextFieldValue,
-                textColor = parseColor(color = transactionColorRs.mainTextInputColor),
+                textColor = parseColor(color = transactionDescription.mainTextInputColor),
                 labelText = Localization.getString(
                     Localization.KeyCardHolder,
                     locale = currentLocale
                 ),
-                backgroundBrush = transactionColorRs.toInputGradient(),
+                backgroundBrush = transactionDescription.toInputGradient(),
                 onValueChange = onCardHolderChanged,
-                labelColor = parseColor(color = transactionColorRs.inputLabelColor),
+                labelColor = parseColor(color = transactionDescription.inputLabelColor),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Characters,
                     keyboardType = KeyboardType.Text,
@@ -323,7 +323,7 @@ internal fun MainSuccessClassicCard(
                 checked = isSaveCard,
                 onCheckedChange = { onSaveCardChanged(it) },
                 colors = CheckboxDefaults.colors(
-                    checkedColor = parseColor(color = transactionColorRs.mainFormColor),
+                    checkedColor = parseColor(color = transactionDescription.mainFormColor),
                     uncheckedColor = secondaryColor,
                     checkmarkColor = Color.White
                 ),

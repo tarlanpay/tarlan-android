@@ -45,9 +45,9 @@ import com.smarttoolfactory.screenshot.ScreenshotBox
 import com.smarttoolfactory.screenshot.ScreenshotState
 import com.smarttoolfactory.screenshot.rememberScreenshotState
 import kz.tarlanpayments.storage.androidsdk.R
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.toTextGradient
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanInstance
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionStatusModel
 import kz.tarlanpayments.storage.androidsdk.sdk.provideCurrentLocale
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitBorderButton
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitCompanyLogo
@@ -56,16 +56,15 @@ import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitTitleValueComponent
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.LanguageDropDown
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.Theme.kitColor
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.theme.KitTheme
-import kz.tarlanpayments.storage.androidsdk.sdk.DepsHolder
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionStatusRs
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.createPdfFromBitmap
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.parseColor
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.sharePdf
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toTextGradient
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
-
 
 internal class StatusFragment : Fragment() {
 
@@ -133,7 +132,7 @@ internal class StatusFragment : Fragment() {
                             loading = false
                             sharePdf(
                                 context,
-                                "${currentState.transactionStatusRs.transactionInfoMain.transactionId}.pdf"
+                                "${currentState.transactionDescriptionModel.transactionId}.pdf"
                             )
                         }
                     }
@@ -141,7 +140,7 @@ internal class StatusFragment : Fragment() {
 
                     if (!loading) {
                         StatusMainComponent(
-                            transactionStatusRs = currentState.transactionStatusRs,
+                            transactionDescriptionModel = currentState.transactionDescriptionModel,
                             screenshotState = screenshotState,
                             onSaveClick = {
                                 loading = true
@@ -150,13 +149,13 @@ internal class StatusFragment : Fragment() {
                                     createPdfFromBitmap(
                                         context = context,
                                         bitmap = it,
-                                        fileName = "${currentState.transactionStatusRs.transactionInfoMain.transactionId}.pdf"
+                                        fileName = "${currentState.transactionDescriptionModel.transactionId}.pdf"
                                     )
                                 }
                             },
                             onBackClick = {
-                                when (currentState.transactionStatusRs.transactionInfoMain.transactionStatus.code) {
-                                    TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
+                                when (currentState.transactionDescriptionModel.status) {
+                                    TarlanTransactionStatusModel.Success -> {
                                         activity?.setResult(Activity.RESULT_OK, Intent().apply {
                                             putExtra(
                                                 "transactionId",
@@ -166,13 +165,13 @@ internal class StatusFragment : Fragment() {
                                         activity?.finish()
                                     }
 
-                                    TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
+                                    TarlanTransactionStatusModel.Fail -> {
                                         activity?.setResult(Activity.RESULT_CANCELED)
                                         activity?.finish()
                                     }
 
-                                    TransactionInfoMainRs.TransactionStatusDto.REFUND -> {
-                                        if (currentState.transactionStatusRs.transactionInfoMain.transactionType.code == TransactionInfoMainRs.TransactionTypeDto.CARD_LINK) {
+                                    TarlanTransactionStatusModel.Refund -> {
+                                        if (currentState.transactionDescriptionModel.type == TarlanTransactionDescriptionModel.TransactionType.CardLink) {
                                             activity?.setResult(Activity.RESULT_OK, Intent().apply {
                                                 putExtra(
                                                     "transactionId",
@@ -214,15 +213,14 @@ internal class StatusFragment : Fragment() {
 
     @Composable
     private fun StatusMainComponent(
-        transactionStatusRs: TransactionStatusRs,
+        transactionDescriptionModel: TarlanTransactionDescriptionModel,
         screenshotState: ScreenshotState,
         onSaveClick: () -> Unit = {},
         onBackClick: () -> Unit = {},
     ) {
         val context = LocalContext.current
         var currentLocale by remember { mutableStateOf(context.provideCurrentLocale()) }
-        var redirectTime by
-        remember { mutableIntStateOf(transactionStatusRs.transactionPayForm.timeout ?: 0) }
+        var redirectTime by remember { mutableIntStateOf(transactionDescriptionModel.timeout ?: 0) }
 
         Box(
             modifier = Modifier
@@ -236,26 +234,26 @@ internal class StatusFragment : Fragment() {
                 ScreenshotBox(screenshotState = screenshotState) {
                     Column {
                         Spacer(modifier = Modifier.size(32.dp))
-                        transactionStatusRs.toIcon().invoke(this)
+                        transactionDescriptionModel.toIcon().invoke(this)
                         Spacer(modifier = Modifier.size(8.dp))
-                        transactionStatusRs.toTitle().invoke(this)
+                        transactionDescriptionModel.toTitle().invoke(this)
                         Spacer(modifier = Modifier.height(8.dp))
-                        transactionStatusRs.toSubtitle().invoke(this)
+                        transactionDescriptionModel.toSubtitle().invoke(this)
                         Spacer(modifier = Modifier.height(8.dp))
-                        transactionStatusRs.toBody().invoke(this)
+                        transactionDescriptionModel.toBody().invoke(this)
                     }
                 }
 
                 Column(
                     Modifier.padding(horizontal = 16.dp)
                 ) {
-                    transactionStatusRs.toActions(
+                    transactionDescriptionModel.toActions(
                         onBackClick = onBackClick,
                         onSaveClick = onSaveClick,
                     ).invoke(this)
                 }
 
-                if (transactionStatusRs.transactionPayForm.hasRedirect) {
+                if (transactionDescriptionModel.hasRedirect) {
                     Text(
                         modifier = Modifier
                             .padding(vertical = 10.dp, horizontal = 16.dp)
@@ -283,12 +281,12 @@ internal class StatusFragment : Fragment() {
                     .padding(horizontal = 16.dp),
                 onLanguageChanged = { currentLocale = it },
                 currentLanguage = currentLocale,
-                accentColor = parseColor(color = transactionStatusRs.transactionColor.mainFormColor)
+                accentColor = parseColor(color = transactionDescriptionModel.mainFormColor)
             )
         }
 
         LaunchedEffect(this) {
-            if (transactionStatusRs.transactionPayForm.hasRedirect) {
+            if (transactionDescriptionModel.hasRedirect) {
                 while (redirectTime > 0) {
                     redirectTime--
                     kotlinx.coroutines.delay(1000)
@@ -298,11 +296,11 @@ internal class StatusFragment : Fragment() {
         }
     }
 
-    private fun TransactionStatusRs.toIcon(): @Composable ColumnScope.() -> Unit = {
-        when (this@toIcon.transactionInfoMain.transactionStatus.code) {
-            TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
-                when (transactionInfoMain.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> {
+    private fun TarlanTransactionDescriptionModel.toIcon(): @Composable ColumnScope.() -> Unit = {
+        when (this@toIcon.status) {
+            TarlanTransactionStatusModel.Success -> {
+                when (type) {
+                    TarlanTransactionDescriptionModel.TransactionType.CardLink -> {
                         Icon(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
@@ -318,7 +316,7 @@ internal class StatusFragment : Fragment() {
                             modifier = Modifier
                                 .size(64.dp)
                                 .align(Alignment.CenterHorizontally),
-                            model = DepsHolder.provideImage(transactionPayForm.logoFilePath),
+                            model = TarlanInstance.provideImage(this@toIcon.logoFilePath),
                             contentDescription = "",
                             error = painterResource(id = R.drawable.ic_error_placaholder),
                             placeholder = painterResource(id = R.drawable.ic_error_placaholder)
@@ -327,7 +325,7 @@ internal class StatusFragment : Fragment() {
                 }
             }
 
-            TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
+            TarlanTransactionStatusModel.Fail -> {
                 Icon(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
@@ -338,9 +336,9 @@ internal class StatusFragment : Fragment() {
                 )
             }
 
-            TransactionInfoMainRs.TransactionStatusDto.REFUND -> {
-                when (transactionInfoMain.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> {
+            TarlanTransactionStatusModel.Refund -> {
+                when (this@toIcon.type) {
+                    TarlanTransactionDescriptionModel.TransactionType.CardLink -> {
                         Icon(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
@@ -377,14 +375,14 @@ internal class StatusFragment : Fragment() {
         }
     }
 
-    private fun TransactionStatusRs.toTitle(): @Composable ColumnScope.() -> Unit = {
+    private fun TarlanTransactionDescriptionModel.toTitle(): @Composable ColumnScope.() -> Unit = {
         val secondaryColor = Color(0xFF555555)
         val currentLocale = LocalContext.current.provideCurrentLocale()
-        when (this@toTitle.transactionInfoMain.transactionStatus.code) {
-            TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
+        when (this@toTitle.status) {
+            TarlanTransactionStatusModel.Success -> {
 
-                when (transactionInfoMain.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK ->
+                when (this@toTitle.type) {
+                    TarlanTransactionDescriptionModel.TransactionType.CardLink ->
                         Text(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             text = Localization.getString(
@@ -402,7 +400,7 @@ internal class StatusFragment : Fragment() {
 
                     else -> Text(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
-                        text = transactionPayForm.storeName,
+                        text = this@toTitle.storeName,
                         style = TextStyle(
                             fontSize = 12.sp,
                             color = secondaryColor,
@@ -414,7 +412,7 @@ internal class StatusFragment : Fragment() {
                 }
             }
 
-            TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
+            TarlanTransactionStatusModel.Fail -> {
                 Text(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     text = Localization.getString(
@@ -430,9 +428,9 @@ internal class StatusFragment : Fragment() {
                 )
             }
 
-            TransactionInfoMainRs.TransactionStatusDto.REFUND -> {
-                when (transactionInfoMain.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK ->
+            TarlanTransactionStatusModel.Refund -> {
+                when (this@toTitle.type) {
+                    TarlanTransactionDescriptionModel.TransactionType.CardLink ->
                         Text(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             text = Localization.getString(
@@ -484,77 +482,95 @@ internal class StatusFragment : Fragment() {
         }
     }
 
-    private fun TransactionStatusRs.toSubtitle(): @Composable ColumnScope.() -> Unit = {
+    private fun TarlanTransactionDescriptionModel.toSubtitle(): @Composable ColumnScope.() -> Unit =
+        {
 
-        val secondaryColor = Color(0xFF555555)
-        val currentLocale = LocalContext.current.provideCurrentLocale()
-        when (this@toSubtitle.transactionInfoMain.transactionStatus.code) {
-            TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
-                when (transactionInfoMain.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK ->
-                        Text(
+            val secondaryColor = Color(0xFF555555)
+            val currentLocale = LocalContext.current.provideCurrentLocale()
+            when (this@toSubtitle.status) {
+                TarlanTransactionStatusModel.Success -> {
+                    when (this@toSubtitle.type) {
+                        TarlanTransactionDescriptionModel.TransactionType.CardLink ->
+                            Text(
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                text = Localization.getString(
+                                    Localization.KeyBillCardLinkSuccessSubtitle,
+                                    currentLocale
+                                ),
+                                style = TextStyle(
+                                    fontSize = 14.sp,
+                                    color = kitColor.positive,
+                                    fontWeight = FontWeight.W400
+                                ),
+                                color = secondaryColor,
+                                textAlign = TextAlign.Center
+                            )
+
+                        else -> Text(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
-                            text = Localization.getString(
-                                Localization.KeyBillCardLinkSuccessSubtitle,
-                                currentLocale
-                            ),
+                            text = "${this@toSubtitle.totalAmount}₸",
                             style = TextStyle(
-                                fontSize = 14.sp,
-                                color = kitColor.positive,
-                                fontWeight = FontWeight.W400
+                                brush = this@toSubtitle.toTextGradient(),
+                                fontWeight = FontWeight.W700,
+                                fontSize = 32.sp,
                             ),
-                            color = secondaryColor,
                             textAlign = TextAlign.Center
                         )
+                    }
+                }
 
-                    else -> Text(
+                TarlanTransactionStatusModel.Fail -> {
+                    Text(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
-                        text = "${transactionBillRs!!.totalAmount}₸",
+                        text = Localization.getString(
+                            Localization.KeyBillFailSubtitle,
+                            currentLocale
+                        ),
                         style = TextStyle(
-                            brush = transactionColor.toTextGradient(),
-                            fontWeight = FontWeight.W700,
-                            fontSize = 32.sp,
+                            fontSize = 14.sp,
+                            color = kitColor.secondary,
+                            fontWeight = FontWeight.W400
                         ),
                         textAlign = TextAlign.Center
                     )
                 }
-            }
 
-            TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = Localization.getString(
-                        Localization.KeyBillFailSubtitle,
-                        currentLocale
-                    ),
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        color = kitColor.secondary,
-                        fontWeight = FontWeight.W400
-                    ),
-                    textAlign = TextAlign.Center
-                )
-            }
+                TarlanTransactionStatusModel.Refund -> {
+                    when (this@toSubtitle.type) {
+                        TarlanTransactionDescriptionModel.TransactionType.CardLink ->
+                            Text(
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                text = Localization.getString(
+                                    Localization.KeyBillCardLinkSuccessSubtitle,
+                                    currentLocale
+                                ),
+                                style = TextStyle(
+                                    fontSize = 14.sp,
+                                    color = kitColor.positive,
+                                    fontWeight = FontWeight.W400
+                                ),
+                                color = secondaryColor,
+                                textAlign = TextAlign.Center
+                            )
 
-            TransactionInfoMainRs.TransactionStatusDto.REFUND -> {
-                when (transactionInfoMain.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK ->
-                        Text(
+                        else -> Text(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             text = Localization.getString(
-                                Localization.KeyBillCardLinkSuccessSubtitle,
+                                Localization.KeyBillFailSubtitle,
                                 currentLocale
                             ),
                             style = TextStyle(
                                 fontSize = 14.sp,
-                                color = kitColor.positive,
+                                color = kitColor.secondary,
                                 fontWeight = FontWeight.W400
                             ),
-                            color = secondaryColor,
                             textAlign = TextAlign.Center
                         )
+                    }
+                }
 
-                    else -> Text(
+                else -> {
+                    Text(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                         text = Localization.getString(
                             Localization.KeyBillFailSubtitle,
@@ -569,64 +585,47 @@ internal class StatusFragment : Fragment() {
                     )
                 }
             }
-
-            else -> {
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = Localization.getString(
-                        Localization.KeyBillFailSubtitle,
-                        currentLocale
-                    ),
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        color = kitColor.secondary,
-                        fontWeight = FontWeight.W400
-                    ),
-                    textAlign = TextAlign.Center
-                )
-            }
         }
-    }
 
-    private fun TransactionStatusRs.toBody(): @Composable ColumnScope.() -> Unit = {
+    private fun TarlanTransactionDescriptionModel.toBody(): @Composable ColumnScope.() -> Unit = {
         val secondaryColor = Color(0xFF555555)
         val currentLocale = LocalContext.current.provideCurrentLocale()
-        when (this@toBody.transactionInfoMain.transactionStatus.code) {
-            TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
-                when (this@toBody.transactionInfoMain.transactionType.code) {
-                    TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> Unit
+        when (this@toBody.status) {
+            TarlanTransactionStatusModel.Success -> {
+                when (this@toBody.type) {
+                    TarlanTransactionDescriptionModel.TransactionType.CardLink -> Unit
                     else -> {
                         Spacer(modifier = Modifier.size(32.dp))
 
                         KitDotDivider(secondaryColor)
 
-                        listOf(
+                        listOf<Pair<String, String>>(
                             Localization.getString(
                                 Localization.KeyOrderNumber,
                                 currentLocale
-                            ) to transactionBillRs!!.transactionId.toString(),
+                            ) to this@toBody.transactionId.toString(),
                             Localization.getString(
                                 Localization.KeyAmount,
                                 currentLocale
-                            ) to "${transactionBillRs.orderAmount}₸",
+                            ) to "${this@toBody.orderAmount}₸",
                             Localization.getString(
                                 Localization.KeyFee,
                                 currentLocale
-                            ) to "${transactionBillRs.upperCommissionAmount}₸",
+                            ) to "${this@toBody.upperCommissionAmount}₸",
                             Localization.getString(
                                 Localization.KeyDate,
                                 currentLocale
-                            ) to convertIsoToStandard(transactionBillRs.dateTime),
+                            ) to convertIsoToStandard(this@toBody.dateTime ?: ""),
                             Localization.getString(
                                 Localization.KeyBank,
                                 currentLocale
-                            ) to transactionBillRs.acquirerName,
+                            ) to this@toBody.acquirerName.toString(),
                         ).forEach {
                             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                                 KitTitleValueComponent(
                                     title = it.first,
                                     value = it.second,
-                                    titleColor = parseColor(color = transactionColor.mainFormColor),
+                                    titleColor = parseColor(color = this@toBody.mainFormColor),
                                     valueColor = secondaryColor
                                 )
                             }
@@ -636,7 +635,7 @@ internal class StatusFragment : Fragment() {
 
                         Text(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
-                            text = transactionBillRs.paymentOrganization,
+                            text = this@toBody.paymentOrganization ?: "",
                             style = TextStyle(
                                 fontSize = 12.sp,
                                 color = secondaryColor,
@@ -657,19 +656,19 @@ internal class StatusFragment : Fragment() {
     }
 
 
-    private fun TransactionStatusRs.toActions(
+    private fun TarlanTransactionDescriptionModel.toActions(
         onSaveClick: () -> Unit,
         onBackClick: () -> Unit,
     ): @Composable ColumnScope.() -> Unit = {
         val currentLocale = LocalContext.current.provideCurrentLocale()
-        when (this@toActions.transactionInfoMain.transactionStatus.code) {
-            TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> {
+        when (this@toActions.status) {
+            TarlanTransactionStatusModel.Success -> {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 KitBorderButton(
                     title = Localization.getString(Localization.KeySaveBill, currentLocale),
-                    brush = transactionColor.toFormGradient(),
-                    accentColor = parseColor(color = transactionColor.mainFormColor),
+                    brush = this@toActions.toFormGradient(),
+                    accentColor = parseColor(color = this@toActions.mainFormColor),
                     onClick = onSaveClick
                 )
 
@@ -677,28 +676,28 @@ internal class StatusFragment : Fragment() {
 
                 KitBorderButton(
                     title = Localization.getString(Localization.KeyBack, currentLocale),
-                    brush = transactionColor.toFormGradient(),
-                    accentColor = parseColor(color = transactionColor.mainFormColor),
+                    brush = this@toActions.toFormGradient(),
+                    accentColor = parseColor(color = this@toActions.mainFormColor),
                     onClick = onBackClick
                 )
             }
 
-            TransactionInfoMainRs.TransactionStatusDto.FAIL -> {
+            TarlanTransactionStatusModel.Fail -> {
                 Spacer(modifier = Modifier.height(8.dp))
                 KitBorderButton(
                     title = Localization.getString(Localization.KeyBack, currentLocale),
-                    brush = transactionColor.toFormGradient(),
-                    accentColor = parseColor(color = transactionColor.mainFormColor),
+                    brush = this@toActions.toFormGradient(),
+                    accentColor = parseColor(color = this@toActions.mainFormColor),
                     onClick = onBackClick
                 )
             }
 
-            TransactionInfoMainRs.TransactionStatusDto.REFUND -> {
+            TarlanTransactionStatusModel.Refund -> {
                 Spacer(modifier = Modifier.height(8.dp))
                 KitBorderButton(
                     title = Localization.getString(Localization.KeyBack, currentLocale),
-                    brush = transactionColor.toFormGradient(),
-                    accentColor = parseColor(color = transactionColor.mainFormColor),
+                    brush = this@toActions.toFormGradient(),
+                    accentColor = parseColor(color = this@toActions.mainFormColor),
                     onClick = onBackClick
                 )
             }
@@ -707,8 +706,8 @@ internal class StatusFragment : Fragment() {
                 Spacer(modifier = Modifier.height(8.dp))
                 KitBorderButton(
                     title = Localization.getString(Localization.KeyBack, currentLocale),
-                    brush = transactionColor.toFormGradient(),
-                    accentColor = parseColor(color = transactionColor.mainFormColor),
+                    brush = this@toActions.toFormGradient(),
+                    accentColor = parseColor(color = this@toActions.mainFormColor),
                     onClick = onBackClick
                 )
             }

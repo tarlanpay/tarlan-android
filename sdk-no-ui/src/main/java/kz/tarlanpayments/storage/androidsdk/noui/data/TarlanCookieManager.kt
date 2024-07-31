@@ -1,4 +1,4 @@
-package kz.tarlanpayments.storage.androidsdk.sdk.data
+package kz.tarlanpayments.storage.androidsdk.noui.data
 
 import okhttp3.Cookie
 import okhttp3.CookieJar

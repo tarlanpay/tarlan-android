@@ -38,19 +38,10 @@ import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.FragmentManager
 import coil.compose.AsyncImage
 import kz.tarlanpayments.storage.androidsdk.R
-import kz.tarlanpayments.storage.androidsdk.sdk.DepsHolder
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionColorRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoMainRs
-import kz.tarlanpayments.storage.androidsdk.sdk.data.dto.TransactionInfoPayFormRs
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanInstance
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.main_success.FormController
 import kz.tarlanpayments.storage.androidsdk.sdk.feature.main.visual_transformation.generalMaskPhoneTransformation
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationErrorType
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.emailValidationErrorText
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.phoneValidationErrorText
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.toInputGradient
-import kz.tarlanpayments.storage.androidsdk.sdk.utils.toTextGradient
 import kz.tarlanpayments.storage.androidsdk.sdk.provideCurrentLocale
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitBorderButton
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitCompanyLogo
@@ -60,15 +51,20 @@ import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitSegmentItem
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.KitTextField
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.LanguageDropDown
 import kz.tarlanpayments.storage.androidsdk.sdk.ui.utils.parseColor
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.Localization
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.ValidationErrorType
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.emailValidationErrorText
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.phoneValidationErrorText
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toFormGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toInputGradient
+import kz.tarlanpayments.storage.androidsdk.sdk.utils.toTextGradient
 
 @Composable
 internal fun MainSuccessClassic(
     fragmentManager: FragmentManager,
     focusRequester: Map<String, FocusRequester>,
     transactionId: Long,
-    transactionInfoMainRs: TransactionInfoMainRs,
-    transactionInfoPayFormRs: TransactionInfoPayFormRs,
-    transactionColorRs: TransactionColorRs,
+    transactionDescription: TarlanTransactionDescriptionModel,
     mainSuccessController: FormController,
     cardNumberTextFieldValue: TextFieldValue,
     onCardNumberChanged: (TextFieldValue) -> Unit,
@@ -92,12 +88,13 @@ internal fun MainSuccessClassic(
     cardHolderError: ValidationErrorType,
     phoneError: ValidationErrorType,
 
-    isSavedCardChanged: (String, String) -> Unit,
+    onSavedCardChanged: (String, String) -> Unit,
+    onNewCardClicked: () -> Unit,
 
     isSavedCardNumber: TextFieldValue,
     onSaveCardChanged: (Boolean) -> Unit,
     isSaveCard: Boolean,
-    savedCards: List<TransactionInfoMainRs.CardDto>,
+    savedCards: List<TarlanTransactionDescriptionModel.SavedCard>,
 
     isSavedCardUse: Boolean,
     isEnabled: Boolean,
@@ -126,9 +123,7 @@ internal fun MainSuccessClassic(
     ) {
         MainSuccessClassicHeader(
             transactionId = transactionId,
-            transactionInfoMainRs = transactionInfoMainRs,
-            transactionInfoPayFormRs = transactionInfoPayFormRs,
-            transactionColorRs = transactionColorRs,
+            transactionDescription = transactionDescription,
             secondaryColor = secondaryColor,
             currentLanguage = currentLanguage,
             onLanguageChanged = { currentLanguage = it }
@@ -139,8 +134,8 @@ internal fun MainSuccessClassic(
 
         if (mainSuccessController.isGooglePlayVisible) {
             KitSegmentControl(
-                selectedBrush = transactionColorRs.toFormGradient(),
-                accentColor = parseColor(color = transactionColorRs.mainFormColor),
+                selectedBrush = transactionDescription.toFormGradient(),
+                accentColor = parseColor(color = transactionDescription.mainFormColor),
                 unSelectedTint = secondaryColor,
                 selectedBackground = Color.White,
                 unSelectedBackground = Color(0xFFECECEC),
@@ -149,7 +144,7 @@ internal fun MainSuccessClassic(
                     currentPageIndex = it
                     onGooglePayTab(currentPageIndex == 1)
                 },
-                selectedColor = parseColor(color = transactionColorRs.mainFormColor),
+                selectedColor = parseColor(color = transactionDescription.mainFormColor),
                 itemsTitle = listOf(
                     KitSegmentItem(
                         title = Localization.getString(
@@ -175,7 +170,7 @@ internal fun MainSuccessClassic(
                 controller = mainSuccessController,
                 focusRequester = focusRequester,
                 fragmentManager = fragmentManager,
-                transactionColorRs = transactionColorRs,
+                transactionDescription = transactionDescription,
                 savedCard = savedCards,
                 cardNumberError = cardNumberError,
                 cardExpireDateError = cardExpError,
@@ -196,7 +191,8 @@ internal fun MainSuccessClassic(
                 secondaryColor = secondaryColor,
                 currentLocale = currentLanguage,
                 isSavedCardUse = isSavedCardUse,
-                isSavedCardChanged = isSavedCardChanged,
+                onSavedCardChanged = onSavedCardChanged,
+                onNewCardClicked = onNewCardClicked,
                 isSavedCardNumber = isSavedCardNumber,
                 onCardRemoved = onCardRemoved
             ).invoke(this)
@@ -211,7 +207,7 @@ internal fun MainSuccessClassic(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(transactionColorRs.toFormGradient(), RoundedCornerShape(10.dp))
+                    .background(transactionDescription.toFormGradient(), RoundedCornerShape(10.dp))
                     .padding(4.dp)
             ) {
 
@@ -221,20 +217,20 @@ internal fun MainSuccessClassic(
                     KitTextField(
                         textFieldModifier = Modifier.focusRequester(focusRequester["phone"]!!),
                         value = phoneNumberTextFieldValue,
-                        textColor = parseColor(color = transactionColorRs.mainTextInputColor),
+                        textColor = parseColor(color = transactionDescription.mainTextInputColor),
                         labelText = "${phoneRequiredHint}${
                             Localization.getString(
                                 Localization.KeyPhone,
                                 locale = currentLanguage
                             )
                         }",
-                        backgroundBrush = transactionColorRs.toInputGradient(),
+                        backgroundBrush = transactionDescription.toInputGradient(),
                         onValueChange = {
                             if (it.text.length <= 10 && it.text.isDigitsOnly()) {
                                 onPhoneNumberChanged(it)
                             }
                         },
-                        labelColor = parseColor(color = transactionColorRs.inputLabelColor),
+                        labelColor = parseColor(color = transactionDescription.inputLabelColor),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Next
@@ -249,16 +245,16 @@ internal fun MainSuccessClassic(
                     KitTextField(
                         textFieldModifier = Modifier.focusRequester(focusRequester["email"]!!),
                         value = emailTextFieldValue,
-                        textColor = parseColor(color = transactionColorRs.mainTextInputColor),
+                        textColor = parseColor(color = transactionDescription.mainTextInputColor),
                         labelText = "$emailRequiredHint${
                             Localization.getString(
                                 Localization.KeyEmail,
                                 locale = currentLanguage
                             )
                         }",
-                        backgroundBrush = transactionColorRs.toInputGradient(),
+                        backgroundBrush = transactionDescription.toInputGradient(),
                         onValueChange = onEmailChanged,
-                        labelColor = parseColor(color = transactionColorRs.inputLabelColor),
+                        labelColor = parseColor(color = transactionDescription.inputLabelColor),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
                             imeAction = ImeAction.Next
@@ -274,10 +270,10 @@ internal fun MainSuccessClassic(
             Spacer(modifier = Modifier.height(16.dp))
 
             KitGradientButton(
-                title = transactionInfoMainRs.getButtonTitle(currentLanguage),
-                brush = transactionColorRs.toFormGradient(),
-                textColor = parseColor(color = transactionColorRs.inputLabelColor),
-                accentColor = parseColor(color = transactionColorRs.inputLabelColor),
+                title = transactionDescription.getButtonTitle(currentLanguage),
+                brush = transactionDescription.toFormGradient(),
+                textColor = parseColor(color = transactionDescription.inputLabelColor),
+                accentColor = parseColor(color = transactionDescription.inputLabelColor),
                 isEnabled = isEnabled,
                 onClick = onPayClick,
                 isProgress = isProgress
@@ -291,8 +287,8 @@ internal fun MainSuccessClassic(
                 Localization.KeyCancel,
                 locale = currentLanguage
             ),
-            brush = transactionColorRs.toFormGradient(),
-            accentColor = parseColor(color = transactionColorRs.mainFormColor),
+            brush = transactionDescription.toFormGradient(),
+            accentColor = parseColor(color = transactionDescription.mainFormColor),
             onClick = onCancelClick
         )
 
@@ -300,9 +296,9 @@ internal fun MainSuccessClassic(
     }
 }
 
-private fun TransactionInfoMainRs.getButtonTitle(currentLanguage: String): String {
-    when (this.transactionType.code) {
-        TransactionInfoMainRs.TransactionTypeDto.IN -> {
+private fun TarlanTransactionDescriptionModel.getButtonTitle(currentLanguage: String): String {
+    when (this.type) {
+        TarlanTransactionDescriptionModel.TransactionType.In -> {
             return "${
                 Localization.getString(
                     Localization.KeyPay,
@@ -311,7 +307,7 @@ private fun TransactionInfoMainRs.getButtonTitle(currentLanguage: String): Strin
             } ${this.totalAmount}₸"
         }
 
-        TransactionInfoMainRs.TransactionTypeDto.OUT -> {
+        TarlanTransactionDescriptionModel.TransactionType.Out -> {
             return "${
                 Localization.getString(
                     Localization.KeyRefund,
@@ -320,7 +316,7 @@ private fun TransactionInfoMainRs.getButtonTitle(currentLanguage: String): Strin
             } ${this.totalAmount}₸"
         }
 
-        TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> {
+        TarlanTransactionDescriptionModel.TransactionType.CardLink -> {
             return Localization.getString(
                 Localization.KeyCardLink,
                 currentLanguage
@@ -334,9 +330,7 @@ private fun TransactionInfoMainRs.getButtonTitle(currentLanguage: String): Strin
 @Composable
 private fun MainSuccessClassicHeader(
     transactionId: Long,
-    transactionInfoMainRs: TransactionInfoMainRs,
-    transactionInfoPayFormRs: TransactionInfoPayFormRs,
-    transactionColorRs: TransactionColorRs,
+    transactionDescription: TarlanTransactionDescriptionModel,
     secondaryColor: Color,
     currentLanguage: String,
     onLanguageChanged: (String) -> Unit
@@ -345,7 +339,7 @@ private fun MainSuccessClassicHeader(
     Row(modifier = Modifier.fillMaxWidth()) {
         AsyncImage(
             modifier = Modifier.size(64.dp),
-            model = DepsHolder.provideImage(transactionInfoPayFormRs.logoFilePath),
+            model = TarlanInstance.provideImage(transactionDescription.logoFilePath),
             contentDescription = "",
             placeholder = painterResource(id = R.drawable.ic_error_placaholder),
             error = painterResource(id = R.drawable.ic_error_placaholder)
@@ -358,7 +352,7 @@ private fun MainSuccessClassicHeader(
                 .weight(1f)
         ) {
             Text(
-                text = transactionInfoPayFormRs.storeName,
+                text = transactionDescription.storeName,
                 style = TextStyle(
                     fontSize = 12.sp,
                     color = secondaryColor,
@@ -366,9 +360,9 @@ private fun MainSuccessClassicHeader(
                 )
             )
             Text(
-                text = "${transactionInfoMainRs.orderAmount}₸",
+                text = "${transactionDescription.orderAmount}₸",
                 style = TextStyle(
-                    brush = transactionColorRs.toTextGradient(),
+                    brush = transactionDescription.toTextGradient(),
                     fontWeight = FontWeight.W700,
                     fontSize = 32.sp,
                 )
@@ -393,7 +387,7 @@ private fun MainSuccessClassicHeader(
                             Localization.KeyCommssion,
                             currentLanguage
                         )
-                    } ${transactionInfoMainRs.upperCommissionAmount}KZT",
+                    } ${transactionDescription.upperCommissionAmount}KZT",
                     style = TextStyle(
                         fontSize = 11.sp,
                         color = secondaryColor,
@@ -406,7 +400,7 @@ private fun MainSuccessClassicHeader(
         LanguageDropDown(
             onLanguageChanged = { onLanguageChanged(it) },
             currentLanguage = currentLanguage,
-            accentColor = parseColor(color = transactionColorRs.mainFormColor)
+            accentColor = parseColor(color = transactionDescription.mainFormColor)
         )
     }
 }

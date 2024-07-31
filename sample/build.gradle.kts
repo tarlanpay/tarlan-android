@@ -22,7 +22,9 @@ android {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
+                "${project(":sdk").projectDir}/proguard-rules.pro",
+                "${project(":sdk-no-ui").projectDir}/proguard-rules.pro"
             )
         }
         debug {
@@ -30,7 +32,8 @@ android {
             isDebuggable = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "${project(":sdk").projectDir}/proguard-rules.pro"
+                "${project(":sdk").projectDir}/proguard-rules.pro",
+                "${project(":sdk-no-ui").projectDir}/proguard-rules.pro"
             )
         }
     }
@@ -68,5 +71,5 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    implementation("kz.tarlanpayments.storage:androidsdk:1.0.8")
+    implementation("kz.tarlanpayments.storage:androidsdk:1.1.1")
 }

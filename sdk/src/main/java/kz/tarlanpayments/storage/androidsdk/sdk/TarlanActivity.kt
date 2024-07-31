@@ -8,6 +8,7 @@ import com.github.terrakok.cicerone.Cicerone
 import com.github.terrakok.cicerone.androidx.AppNavigator
 import kz.tarlanpayments.storage.androidsdk.R
 import kz.tarlanpayments.storage.androidsdk.TarlanInput
+import kz.tarlanpayments.storage.androidsdk.noui.TarlanInstance
 
 internal class TarlanActivity : AppCompatActivity() {
 
@@ -33,7 +34,7 @@ internal class TarlanActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
-        DepsHolder.isDebug = launcher.isDebug
+        TarlanInstance.init(launcher.isDebug)
         val locale = when (launcher.localeCode?.lowercase()) {
             "ru" -> "ru"
             "en" -> "en"
@@ -53,5 +54,34 @@ internal class TarlanActivity : AppCompatActivity() {
     override fun onPause() {
         navigatorHolder.removeNavigator()
         super.onPause()
+    }
+}
+
+
+internal fun Context.setLocale(locale: String) {
+    val sharedPreferences =
+        this.getSharedPreferences("TarlanPaymentSdk", Context.MODE_PRIVATE)
+    sharedPreferences.edit().putString("currentLocale", locale).apply()
+}
+
+internal fun Context.provideCurrentLocale(): String {
+    return this.getSavedLocale()
+}
+
+private fun Context.getSavedLocale(): String {
+    val sharedPreferences =
+        this.getSharedPreferences("TarlanPaymentSdk", Context.MODE_PRIVATE)
+    return sharedPreferences.getString("currentLocale", this.getCurrentSystemLocale())!!
+}
+
+private fun Context.getCurrentSystemLocale(): String {
+    val locale = this.resources.configuration.locale.country.uppercase()
+
+    return when (locale) {
+        "EN" -> return "EN"
+        "KK" -> return "KK"
+        "KZ" -> return "KZ"
+        "RU" -> return "RU"
+        else -> return "RU"
     }
 }
