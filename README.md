@@ -133,7 +133,7 @@ Google Pay полностью совместим с продуктами и фу
 
 ```groovy
 dependencies {
-    implementation 'kz.tarlanpayments.storage:androidsdk.noui:1.1.2}'
+    implementation 'kz.tarlanpayments.storage:androidsdk.noui:1.1.2'
 }
 ```
 
