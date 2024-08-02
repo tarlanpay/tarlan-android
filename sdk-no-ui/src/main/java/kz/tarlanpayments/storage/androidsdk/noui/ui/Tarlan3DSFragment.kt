@@ -66,7 +66,7 @@ class Tarlan3DSFragment : Fragment() {
 
             override fun onSuccess() {
                 setFragmentResult(TARLAN_3DS_REQUEST_KEY, Bundle().apply {
-                    putBoolean("TARLAN_3DS_RESULT", true)
+                    putBoolean(TARLAN_3DS_RESULT, true)
                 })
             }
         }
