@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/sample" />
             <option value="$PROJECT_DIR$/sdk" />
+            <option value="$PROJECT_DIR$/sdk-no-ui" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

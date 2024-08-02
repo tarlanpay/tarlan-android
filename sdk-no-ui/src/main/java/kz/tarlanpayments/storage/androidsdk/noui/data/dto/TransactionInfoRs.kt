@@ -66,12 +66,6 @@ internal data class TransactionInfoMainRs(
         @SerializedName("code") @Expose val code: String,
         @SerializedName("name") @Expose val name: String,
     ) {
-        companion object {
-            const val IN = "in"
-            const val OUT = "out"
-            const val CARD_LINK = "card_link"
-            const val ONE_CLICK_PAY_IN = "one_click_pay_in"
-        }
     }
 
     data class TransactionAvailableTypesDto(
@@ -80,7 +74,9 @@ internal data class TransactionInfoMainRs(
     ) {
         companion object {
             const val GooglePay = "google_pay"
-            const val CardLink = "card_link"
+            const val IN = "in"
+            const val OUT = "out"
+            const val CARD_LINK = "card_link"
         }
     }
 }

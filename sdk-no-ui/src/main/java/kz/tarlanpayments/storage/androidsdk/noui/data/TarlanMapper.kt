@@ -31,13 +31,7 @@ internal object TarlanMapper {
             },
             totalAmount = transactionInfo.totalAmount,
             projectID = transactionInfo.projectId,
-            type = when (transactionInfo.transactionType.code) {
-                TransactionInfoMainRs.TransactionTypeDto.IN,
-                TransactionInfoMainRs.TransactionTypeDto.ONE_CLICK_PAY_IN-> TarlanTransactionDescriptionModel.TransactionType.In
-                TransactionInfoMainRs.TransactionTypeDto.OUT -> TarlanTransactionDescriptionModel.TransactionType.Out
-                TransactionInfoMainRs.TransactionTypeDto.CARD_LINK -> TarlanTransactionDescriptionModel.TransactionType.CardLink
-                else -> throw Exception()
-            },
+            type = transactionInfo.availableTypes.toTransactionType(),
             status = transactionStatus,
             hasGooglePay = transactionInfo.availableTypes.any { it.code == TransactionInfoMainRs.TransactionAvailableTypesDto.GooglePay },
             requiredEmail = transactionInfoPayForm.requiredEmail,
@@ -107,5 +101,18 @@ internal object TarlanMapper {
             TransactionInfoMainRs.TransactionStatusDto.NEW -> return TarlanTransactionStatusModel.New
             else -> return TarlanTransactionStatusModel.Error
         }
+    }
+
+    private fun List<TransactionInfoMainRs.TransactionAvailableTypesDto>.toTransactionType(): TarlanTransactionDescriptionModel.TransactionType {
+        if (this.any { it.code == TransactionInfoMainRs.TransactionAvailableTypesDto.IN })
+            return TarlanTransactionDescriptionModel.TransactionType.In
+
+        if (this.any { it.code == TransactionInfoMainRs.TransactionAvailableTypesDto.OUT })
+            return TarlanTransactionDescriptionModel.TransactionType.Out
+
+        if (this.any { it.code == TransactionInfoMainRs.TransactionAvailableTypesDto.CARD_LINK })
+            return TarlanTransactionDescriptionModel.TransactionType.CardLink
+
+        throw Exception()
     }
 }

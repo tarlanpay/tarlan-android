@@ -1,6 +1,6 @@
 val appGroupId = "kz.tarlanpayments.storage"
 val appArtifactId = "androidsdk"
-val appVersion = "1.1.1"
+val appVersion = "1.1.2"
 
 plugins {
     id("com.android.library")
