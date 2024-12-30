@@ -90,6 +90,10 @@ internal class MainViewModel(
                     transactionId = transactionId,
                     hash = hash
                 )
+                if (result.isNeedToResume()) {
+                    resumeTransaction()
+                    return@launch
+                }
                 if (result.isTransactionCompleted()) {
                     Log.d("TarlanOutput", "isTransactionCompleted true")
                     result.doTransactionCompleted()

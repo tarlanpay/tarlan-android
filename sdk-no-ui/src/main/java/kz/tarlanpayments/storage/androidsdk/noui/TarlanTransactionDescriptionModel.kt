@@ -39,6 +39,13 @@ data class TarlanTransactionDescriptionModel(
     val inputLabelColor: String,
 
     val timeout: Int?,
+    val transactionTypeName: String?,
+    val transactionCurrency: String?,
+    val phone: String?,
+    val email: String?,
+    val description: String?,
+    val projectName: String?
+
 ) : Parcelable {
 
     @Parcelize

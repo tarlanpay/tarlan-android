@@ -112,7 +112,7 @@ internal class StatusFragment : Fragment() {
                     this@StatusFragment.activity?.finish()
                 }
 
-                StatusState.Loading -> {
+                is StatusState.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -165,7 +165,7 @@ internal class StatusFragment : Fragment() {
                                         activity?.finish()
                                     }
 
-                                    TarlanTransactionStatusModel.Fail -> {
+                                    TarlanTransactionStatusModel.Fail, TarlanTransactionStatusModel.AvailableTypes, TarlanTransactionStatusModel.Error -> {
                                         activity?.setResult(Activity.RESULT_CANCELED)
                                         activity?.finish()
                                     }
@@ -221,6 +221,7 @@ internal class StatusFragment : Fragment() {
         val context = LocalContext.current
         var currentLocale by remember { mutableStateOf(context.provideCurrentLocale()) }
         var redirectTime by remember { mutableIntStateOf(transactionDescriptionModel.timeout ?: 0) }
+        var stopRedirect by remember { mutableStateOf(false) }
 
         Box(
             modifier = Modifier
@@ -253,7 +254,7 @@ internal class StatusFragment : Fragment() {
                     ).invoke(this)
                 }
 
-                if (transactionDescriptionModel.hasRedirect) {
+                if (transactionDescriptionModel.hasRedirect && stopRedirect.not()) {
                     Text(
                         modifier = Modifier
                             .padding(vertical = 10.dp, horizontal = 16.dp)
@@ -270,6 +271,15 @@ internal class StatusFragment : Fragment() {
                             textAlign = TextAlign.Center
                         )
                     )
+
+                    Box(modifier = Modifier.padding(16.dp)) {
+                        KitBorderButton(
+                            title = Localization.getString(Localization.KeyStayOnPage, currentLocale),
+                            brush = transactionDescriptionModel.toFormGradient(),
+                            accentColor = parseColor(color = transactionDescriptionModel.mainFormColor),
+                            onClick = { stopRedirect = true }
+                        )
+                    }
                 }
 
                 KitCompanyLogo().invoke(this)
@@ -286,7 +296,7 @@ internal class StatusFragment : Fragment() {
         }
 
         LaunchedEffect(this) {
-            if (transactionDescriptionModel.hasRedirect) {
+            if (transactionDescriptionModel.hasRedirect && stopRedirect.not()) {
                 while (redirectTime > 0) {
                     redirectTime--
                     kotlinx.coroutines.delay(1000)
@@ -362,6 +372,18 @@ internal class StatusFragment : Fragment() {
                 }
             }
 
+            TarlanTransactionStatusModel.AvailableTypes -> {
+                AsyncImage(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .align(Alignment.CenterHorizontally),
+                    model = TarlanInstance.provideImage(this@toIcon.logoFilePath),
+                    contentDescription = "",
+                    error = painterResource(id = R.drawable.ic_error_placaholder),
+                    placeholder = painterResource(id = R.drawable.ic_error_placaholder)
+                )
+            }
+
             else -> {
                 Icon(
                     modifier = Modifier
@@ -417,6 +439,22 @@ internal class StatusFragment : Fragment() {
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     text = Localization.getString(
                         Localization.KeyBillFail,
+                        currentLocale
+                    ),
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = kitColor.attention,
+                        fontWeight = FontWeight.W700
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            TarlanTransactionStatusModel.AvailableTypes -> {
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = Localization.getString(
+                        Localization.KeyNoAvailableTypes,
                         currentLocale
                     ),
                     style = TextStyle(
@@ -569,6 +607,8 @@ internal class StatusFragment : Fragment() {
                     }
                 }
 
+                TarlanTransactionStatusModel.AvailableTypes -> Unit
+
                 else -> {
                     Text(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -599,28 +639,78 @@ internal class StatusFragment : Fragment() {
 
                         KitDotDivider(secondaryColor)
 
-                        listOf<Pair<String, String>>(
-                            Localization.getString(
-                                Localization.KeyOrderNumber,
-                                currentLocale
-                            ) to this@toBody.transactionId.toString(),
-                            Localization.getString(
-                                Localization.KeyAmount,
-                                currentLocale
-                            ) to "${this@toBody.orderAmount}₸",
-                            Localization.getString(
-                                Localization.KeyFee,
-                                currentLocale
-                            ) to "${this@toBody.upperCommissionAmount}₸",
-                            Localization.getString(
-                                Localization.KeyDate,
-                                currentLocale
-                            ) to convertIsoToStandard(this@toBody.dateTime ?: ""),
-                            Localization.getString(
-                                Localization.KeyBank,
-                                currentLocale
-                            ) to this@toBody.acquirerName.toString(),
-                        ).forEach {
+                        val items = mutableListOf<Pair<String, String>>()
+
+                        items.apply {
+                            add(
+                                Localization.getString(
+                                    Localization.KeyOrderNumber,
+                                    currentLocale
+                                ) to this@toBody.transactionId.toString()
+                            )
+                            add(
+                                Localization.getString(
+                                    Localization.KeyAmount,
+                                    currentLocale
+                                ) to "${this@toBody.orderAmount}₸"
+                            )
+
+                            if (!this@toBody.projectName.isNullOrEmpty()) {
+                                add(
+                                    Localization.getString(
+                                        Localization.KeyMerchantName,
+                                        currentLocale
+                                    ) to this@toBody.projectName.toString()
+                                )
+                            }
+
+                            add(
+                                Localization.getString(
+                                    Localization.KeyBank,
+                                    currentLocale
+                                ) to this@toBody.acquirerName.toString()
+                            )
+
+                            if (!this@toBody.email.isNullOrEmpty()) {
+                                add(
+                                    Localization.getString(
+                                        Localization.KeyEmail,
+                                        currentLocale
+                                    ) to this@toBody.email.toString()
+                                )
+                            }
+
+                            if (!this@toBody.phone.isNullOrEmpty()) {
+                                add(
+                                    Localization.getString(
+                                        Localization.KeyPhone,
+                                        currentLocale
+                                    ) to this@toBody.phone.toString()
+                                )
+                            }
+
+                            add(
+                                Localization.getString(
+                                    Localization.KeyDate,
+                                    currentLocale
+                                ) to convertIsoToStandard(this@toBody.dateTime ?: "")
+                            )
+
+                            add(
+                                Localization.getString(
+                                    Localization.KeyFee,
+                                    currentLocale
+                                ) to "${this@toBody.upperCommissionAmount}₸"
+                            )
+
+                            add(
+                                Localization.getString(
+                                    Localization.KeyTransactionType,
+                                    currentLocale
+                                ) to this@toBody.transactionTypeName.toString()
+                            )
+                        }
+                        items.forEach {
                             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                                 KitTitleValueComponent(
                                     title = it.first,

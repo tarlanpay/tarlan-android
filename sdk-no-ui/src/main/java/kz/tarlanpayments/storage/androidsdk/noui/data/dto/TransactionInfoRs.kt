@@ -30,7 +30,7 @@ internal data class TransactionInfoMainRs(
     @SerializedName("order_amount") @Expose val orderAmount: Double,
     @SerializedName("upper_commission_amount") @Expose val upperCommissionAmount: Double,
     @SerializedName("total_amount") @Expose val totalAmount: Double,
-    @SerializedName("logo") @Expose val logo: String,
+    @SerializedName("logo") @Expose val logo: String?,
     @SerializedName("transaction_info") @Expose val transactionInfo: TransactionInfo,
     @SerializedName("transaction_status") @Expose val transactionStatus: TransactionStatusDto,
     @SerializedName("transaction_type") @Expose val transactionType: TransactionTypeDto,

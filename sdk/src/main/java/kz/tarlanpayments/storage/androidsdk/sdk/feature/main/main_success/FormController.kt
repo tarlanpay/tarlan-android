@@ -18,7 +18,7 @@ internal class FormController(
     val isGooglePlayVisible = transactionDescription.hasGooglePay && isPhoneCanUseGooglePay
 
     val isSaveCardVisible =
-        transactionDescription.type != TarlanTransactionDescriptionModel.TransactionType.In
+        transactionDescription.type == TarlanTransactionDescriptionModel.TransactionType.In
     val isSavedCardVisible =
         transactionDescription.type != TarlanTransactionDescriptionModel.TransactionType.CardLink
 

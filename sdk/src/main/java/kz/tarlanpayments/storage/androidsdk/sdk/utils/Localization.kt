@@ -49,6 +49,10 @@ internal object Localization {
     val KeyPhoneEmptyError = "phone_empty_error"
     val KeyEmailInvalidError = "email_invalid_error"
     val KeyEmailEmptyError = "email_empty_error"
+    val KeyTransactionType = "transaction_type"
+    val KeyNoAvailableTypes = "no_available_types"
+    val KeyMerchantName = "merchant_name"
+    val KeyStayOnPage = "stay_on_page"
 
     val englishStrings = mapOf(
         KeyCard to "Card",
@@ -94,7 +98,12 @@ internal object Localization {
         KeyCardExpriredEmptyError to "Enter card expiry date",
         KeyEmailEmptyError to "Enter email",
         KeyRefund to "Withdraw",
-        KeyCardLink to "Link a card"
+        KeyCardLink to "Link a card",
+        KeyTransactionType to "Type",
+        KeyNoAvailableTypes to "No available payment types",
+        KeyMerchantName to "Merchant",
+        KeyStayOnPage to "Stay on page"
+
     )
     val russianStrings = mapOf(
         KeyCard to "Карта",
@@ -140,7 +149,11 @@ internal object Localization {
         KeyCardExpriredEmptyError to "Введите срок действия карты",
         KeyEmailEmptyError to "Введите email",
         KeyRefund to "Вывести",
-        KeyCardLink to "Привязать карту"
+        KeyCardLink to "Привязать карту",
+        KeyTransactionType to "Тип",
+        KeyNoAvailableTypes to "Нет доступных типов оплаты",
+        KeyMerchantName to "Мерчант",
+        KeyStayOnPage to "Оставайтесь на странице"
     )
     val kazakhStrings = mapOf(
         KeyCard to "Карта",
@@ -186,7 +199,11 @@ internal object Localization {
         KeyCardExpriredEmptyError to "Картаның мерзімін енгізіңіз",
         KeyEmailEmptyError to "Email енгізіңіз",
         KeyRefund to "Шығару",
-        KeyCardLink to "Картаны байланыстыру"
+        KeyCardLink to "Картаны байланыстыру",
+        KeyTransactionType to "Түрі",
+        KeyNoAvailableTypes to "Қолжетімді төлем түрлері жоқ",
+        KeyMerchantName to "Мерчант",
+        KeyStayOnPage to "Бетте қалу"
     )
 
 

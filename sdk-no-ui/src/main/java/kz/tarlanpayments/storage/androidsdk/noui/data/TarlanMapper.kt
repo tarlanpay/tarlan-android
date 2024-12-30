@@ -39,7 +39,7 @@ internal object TarlanMapper {
             requiredPhone = transactionInfoPayForm.requiredPhone,
             hasPhone = transactionInfoPayForm.hasPhone,
             hasDefaultCard = transactionInfoPayForm.hasDefaultCard,
-            logoFilePath = transactionInfo.logo,
+            logoFilePath = transactionInfo.logo.orEmpty(),
             upperCommissionAmount = transactionInfo.upperCommissionAmount,
             transactionId = transactionInfo.transactionId,
             hasRedirect = transactionInfoPayForm.hasRedirect,
@@ -56,7 +56,13 @@ internal object TarlanMapper {
             secondaryTextColor = transactionColor.secondaryTextColor,
             mainTextInputColor = transactionColor.mainTextInputColor,
             inputLabelColor = transactionColor.inputLabelColor,
-            timeout = transactionInfoPayForm.timeout
+            timeout = transactionInfoPayForm.timeout,
+            transactionTypeName = transactionBill?.transactionType,
+            transactionCurrency = transactionBill?.currency,
+            phone = transactionBill?.phone.takeIf { !it.isNullOrEmpty() },
+            email = transactionBill?.email.takeIf { !it.isNullOrEmpty() },
+            description = transactionBill?.description.takeIf { !it.isNullOrEmpty() },
+            projectName = transactionBill?.projectName.takeIf { !it.isNullOrEmpty() }
         )
     }
 
@@ -94,11 +100,15 @@ internal object TarlanMapper {
     }
 
     fun BaseResponse<TransactionInfoMainRs>.toStatus(): TarlanTransactionStatusModel {
+        if (this.result.availableTypes.isEmpty()) {
+            return TarlanTransactionStatusModel.AvailableTypes
+        }
         when (this.result.transactionStatus.code) {
             TransactionInfoMainRs.TransactionStatusDto.SUCCESS -> return TarlanTransactionStatusModel.Success
             TransactionInfoMainRs.TransactionStatusDto.FAIL -> return TarlanTransactionStatusModel.Fail
             TransactionInfoMainRs.TransactionStatusDto.REFUND -> return TarlanTransactionStatusModel.Refund
             TransactionInfoMainRs.TransactionStatusDto.NEW -> return TarlanTransactionStatusModel.New
+            TransactionRs.Fingerprint, TransactionRs.ThreeDsWaiting -> return TarlanTransactionStatusModel.Resume
             else -> return TarlanTransactionStatusModel.Error
         }
     }
@@ -113,6 +123,6 @@ internal object TarlanMapper {
         if (this.any { it.code == TransactionInfoMainRs.TransactionAvailableTypesDto.CARD_LINK })
             return TarlanTransactionDescriptionModel.TransactionType.CardLink
 
-        throw Exception()
+        return TarlanTransactionDescriptionModel.TransactionType.In
     }
 }

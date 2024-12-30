@@ -273,7 +273,7 @@ dependencies {
   - `transactionId` (Long): Уникальный идентификатор транзакции.
   - `transactionHash` (String): Контрольная сумма транзакции.
 
-> Для прохождения 3DS аутентификации, нужно открыть `Tarlan3DSFragment`. После прохождения `Tarlan3DSFragment`, необходимо вызвать метод `getTransactionStatus` для получения обновленного состояния транзакции.
+> Для прохождения 3DS аутентификации, нужно открыть `Tarlan3DSContract`. После прохождения `Tarlan3DSContract`, необходимо вызвать метод `getTransactionStatus` для получения обновленного состояния транзакции.
 
 #### `data class FingerPrint(...) : TarlanTransactionStateModel`
 
@@ -285,7 +285,7 @@ dependencies {
   - `transactionId` (Long): Уникальный идентификатор транзакции.
   - `transactionHash` (String): Контрольная сумма транзакции.
 
-> Для прохождения Fingerprint аутентификации, нужно открыть `Tarlan3DSV2Fragment`. После этого, вызвать метод `resumeTransaction` и получить новый `TarlanTransactionStateModel` для дальнейших действий в зависимости от статуса.
+> Для прохождения Fingerprint аутентификации, нужно открыть `Tarlan3DSV2Contract`. После этого, вызвать метод `resumeTransaction` и получить новый `TarlanTransactionStateModel` для дальнейших действий в зависимости от статуса.
 
 #### `data class Error(...) : TarlanTransactionStateModel`
 
@@ -300,7 +300,7 @@ dependencies {
 
 ### Использование setFragmentResultListener
 
-Для вызова `Tarlan3DSFragment` и `Tarlan3DSV2Fragment`, необходимо использовать `setFragmentResult` и установить `setFragmentResultListener` с ключом `TARLAN_3DS_REQUEST_KEY`.
+Для вызова `Tarlan3DSContract` и `Tarlan3DSV2Input`, необходимо использовать `registerForActivityResult`.
 ## Поддержка
 
 Если у вас возникли вопросы или проблемы, пожалуйста, посетите наш [центр поддержки](https://tarlanpayments.kz/faq).

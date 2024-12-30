@@ -16,7 +16,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
@@ -24,9 +23,12 @@ import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.PaymentDataRequest
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kz.tarlanpayments.storage.androidsdk.TarlanInput
 import kz.tarlanpayments.storage.androidsdk.noui.TarlanTransactionDescriptionModel
-import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSFragment
-import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSV2Fragment
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSContract
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSInput
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSV2Contract
+import kz.tarlanpayments.storage.androidsdk.noui.ui.Tarlan3DSV2Input
 import kz.tarlanpayments.storage.androidsdk.sdk.GooglePayFacade
 import kz.tarlanpayments.storage.androidsdk.sdk.TarlanActivity
 import kz.tarlanpayments.storage.androidsdk.sdk.TarlanScreens
@@ -37,8 +39,7 @@ import org.json.JSONObject
 
 @Composable
 internal fun MainSuccessView(
-    transactionId: Long,
-    transactionHash: String,
+    launcher: TarlanInput,
     transactionDescription: TarlanTransactionDescriptionModel,
     fragment: Fragment,
     googlePayFacade: GooglePayFacade
@@ -53,8 +54,8 @@ internal fun MainSuccessView(
     val viewModel = viewModel<MainSuccessViewModel>(
         factory = MainSuccessViewModel.MainSuccessViewModelFactory(
             transactionDescription = transactionDescription,
-            transactionId = transactionId,
-            transactionHash = transactionHash
+            transactionId = launcher.transactionId,
+            transactionHash = launcher.hash
         )
     )
     val controller = FormController(
@@ -105,6 +106,30 @@ internal fun MainSuccessView(
 
     val state by viewModel.viewState.collectAsState()
 
+    val launcher3DS = rememberLauncherForActivityResult(contract = Tarlan3DSContract()) { result ->
+        TarlanActivity.router.newRootScreen(
+            TarlanScreens.Status(
+                transactionId = launcher.transactionId,
+                hash = launcher.hash
+            )
+        )
+    }
+
+    val launcher3DSV2 =
+        rememberLauncherForActivityResult(contract = Tarlan3DSV2Contract()) { result ->
+            TarlanActivity.router.newRootScreen(
+                TarlanScreens.MainScreen(
+                    input = TarlanInput(
+                        isDebug = launcher.isDebug,
+                        localeCode = launcher.localeCode,
+                        transactionId = launcher.transactionId,
+                        hash = launcher.hash
+                    ),
+                    isResume = true
+                )
+            )
+        }
+
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest {
             when (it) {
@@ -127,36 +152,20 @@ internal fun MainSuccessView(
                 }
 
                 is MainSuccessEffect.Show3ds -> {
-                    fragment.setFragmentResultListener(Tarlan3DSFragment.TARLAN_3DS_REQUEST_KEY) { _, bundle ->
-                        TarlanActivity.router.newRootScreen(
-                            TarlanScreens.Status(
-                                it.transactionId,
-                                it.transactionHash
-                            )
-                        )
-                    }
-                    TarlanActivity.router.newRootScreen(
-                        TarlanScreens.ThreeDs(
+                    launcher3DS.launch(
+                        Tarlan3DSInput(
+                            params = it.params,
                             termUrl = it.termUrl,
                             action = it.action,
                             transactionId = it.transactionId,
-                            transactionHash = it.transactionHash,
-                            params = it.params,
+                            transactionHash = it.transactionHash
                         )
                     )
                 }
 
                 is MainSuccessEffect.ShowFingerprint -> {
-                    fragment.setFragmentResultListener(Tarlan3DSV2Fragment.TARLAN_3DS_REQUEST_KEY) { _, bundle ->
-                        TarlanActivity.router.newRootScreen(
-                            TarlanScreens.Status(
-                                it.transactionId,
-                                it.transactionHash
-                            )
-                        )
-                    }
-                    TarlanActivity.router.newRootScreen(
-                        TarlanScreens.Fingerprint(
+                    launcher3DSV2.launch(
+                        Tarlan3DSV2Input(
                             methodData = it.methodData,
                             action = it.action,
                             transactionId = it.transactionId,
@@ -314,7 +323,7 @@ internal fun MainSuccessView(
     MainSuccessClassic(
         fragmentManager = fragment.childFragmentManager,
         focusRequester = focusRequesters,
-        transactionId = transactionId,
+        transactionId = launcher.transactionId,
         transactionDescription = transactionDescription,
         mainSuccessController = controller,
         cardNumberTextFieldValue = cardNumberTextFieldValue,
