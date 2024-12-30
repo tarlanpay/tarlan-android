@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
                         TarlanInput(
                             hash = hashField,
                             transactionId = transactionId.toLong(),
-                            isDebug = false
+                            isDebug = true
                         )
                     )
                 })
